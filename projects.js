@@ -32,6 +32,7 @@ function snapshot(root) {
     if (el.classList.contains("section-title")) { title = el.textContent.trim(); continue; }
     const rows = [];
     for (const row of el.querySelectorAll(".row")) {
+      if (row.classList.contains("chart-row")) continue; // Diagramme/Tabellen nicht als Text übernehmen
       const label = row.querySelector(".label")?.textContent.trim() ?? "";
       const input = row.querySelector("input");
       const select = row.querySelector("select");

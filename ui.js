@@ -29,9 +29,11 @@ export const section = (title, rows, footer) => [
   h("div", { class: "group" }, rows),
   footer ? h("div", { class: "footer" }, footer) : null,
 ].filter(Boolean);
-export const inputRow = (label, unit, value, oninput, id) =>
-  h("label", { class: "row" }, h("span", { class: "label" }, label),
-    h("input", { type: "text", inputmode: "decimal", value, placeholder: "–", id, oninput, autocomplete: "off" }),
+// mode: "decimal" (Zahlentastatur) oder "text" (volle Tastatur, z. B. für IP-Adressen, Hex, Logik).
+export const inputRow = (label, unit, value, oninput, id, mode = "decimal") =>
+  h("label", { class: "row" + (mode === "text" ? " wide" : "") }, h("span", { class: "label" }, label),
+    h("input", { type: "text", inputmode: mode, value, placeholder: "–", id, oninput, autocomplete: "off",
+                 autocapitalize: mode === "text" ? "off" : undefined, autocorrect: mode === "text" ? "off" : undefined, spellcheck: mode === "text" ? "false" : undefined }),
     h("span", { class: "unit" }, unit));
 export const resultRow = (label, value, cls = "") =>
   h("div", { class: "row" }, h("span", { class: "label" }, label), h("span", { class: "value " + cls }, value));
@@ -68,7 +70,7 @@ export function calcView({ init, inputs, compute, resultTitle = "Ergebnis", foot
   const resultBox = h("div");
   const bind = (k) => (e) => { s[k] = e.target.value; renderResult(); };
   const set = (k, v) => { s[k] = v; renderAll(); };
-  const field = (k, label, unit) => inputRow(label, unit, s[k], bind(k));
+  const field = (k, label, unit, mode) => inputRow(label, unit, s[k], bind(k), undefined, mode);
   const renderResult = () => {
     let rows;
     try { rows = compute(s, C.parse); }

@@ -4,6 +4,7 @@ import * as T from "./tools.js";
 import * as T2 from "./tools2.js";
 import * as T3 from "./tools3.js";
 import { installView } from "./install.js";
+import * as AT from "./autotools.js";
 import { speedtestView } from "./speedtest.js";
 import { favorites, saveBar, projectsView, reportView, saves } from "./projects.js";
 import { clearCurrentState, setPreset } from "./ui.js";
@@ -49,6 +50,17 @@ const TOOLS = {
   eseries: ["E-Reihen-Normwerte", "E-Reihen", L, "E", T.eSeriesView],
   reactance: ["Blindwiderstand & Resonanz", "Blindwiderstand", L, "X", T.reactance],
   tau: ["RC/RL-Zeitkonstante", "Zeitkonstante", L, "τ", T.timeConstant],
+  loopsim: ["Regelkreis-Simulation (Sprungantwort)", "Regelkreis-Simulation", "#af52de", "⟿", AT.loopSim],
+  bode: ["Frequenzgang & Stabilität (Bode)", "Bode-Diagramm", "#af52de", "∿", AT.bode],
+  zn: ["Reglereinstellung (Ziegler-Nichols)", "Ziegler-Nichols", "#af52de", "ZN", AT.zieglerNichols],
+  pt2: ["PT2-Glied (Dämpfung, Überschwingen)", "PT2-Glied", "#af52de", "D", AT.pt2View],
+  pidforms: ["PID-Parameter umrechnen", "PID-Formen", "#af52de", "Kp", AT.pidFormsView],
+  analog: ["Analogwert-Skalierung (4–20 mA, SPS)", "Analogwert", "#af52de", "mA", AT.analog],
+  numbers: ["Zahlensysteme (Hex, Bin, BCD, REAL)", "Zahlensysteme", "#af52de", "16#", AT.numbers],
+  logic: ["Logik: Wahrheitstabelle & Minimierung", "Logik", "#af52de", "∧", AT.logic],
+  encoder: ["Inkrementalgeber", "Drehgeber", "#af52de", "◴", AT.encoderView],
+  vfd: ["Frequenzumrichter & Motordrehzahl", "Frequenzumrichter", "#af52de", "f", AT.vfdView],
+  rtd: ["Pt100 / Pt1000", "Pt100/Pt1000", "#af52de", "ϑ", AT.rtd],
   speed: ["Speedtest (Download, Ping)", "Speedtest", "#30b0c7", "⏱", speedtestView],
   ipv4: ["IPv4-Subnetzrechner", "IPv4-Subnetz", "#30b0c7", "v4", T3.ipv4],
   subnetting: ["IPv4-Subnetting (Netz aufteilen)", "Subnetting", "#30b0c7", "⊞", T3.ipv4Subnetting],
@@ -69,6 +81,8 @@ const GROUPS = [
   ["Photovoltaik & Speicher", ["pvstring", "pvyield", "battery"]],
   ["Sicherheitstechnik", ["emlight", "alarm", "saa"]],
   ["Elektronik", ["led", "resistor", "eseries", "reactance", "tau"]],
+  ["Automatisierung: Regelungstechnik", ["loopsim", "bode", "zn", "pt2", "pidforms"]],
+  ["Automatisierung: Steuerungstechnik", ["analog", "numbers", "logic", "encoder", "vfd", "rtd"]],
   ["Netzwerktechnik", ["speed", "ipv4", "subnetting", "ipv6", "transfer", "poe", "fiber", "nettables"]],
   ["Nachschlagen", ["ip", "tables"]],
 ];
@@ -241,7 +255,7 @@ function settingsView() {
     ], "Wird für die Farbmarkierung und als Vorgabe beim Mindestquerschnitt verwendet. Welcher Grenzwert gilt, hängt von der Anlage und den anzuwendenden Regeln ab."),
     ...section("Haftungshinweis", [h("div", { class: "row" }, h("span", { class: "hint" }, LEGAL))]),
     ...section("Hinweis zu Leitungsberechnungen", [h("div", { class: "row" }, h("span", { class: "hint" }, DISCLAIMER))]),
-    ...section("", [resultRow("Version", "1.5.2 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
+    ...section("", [resultRow("Version", "1.6.0 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
   ];
 }
 

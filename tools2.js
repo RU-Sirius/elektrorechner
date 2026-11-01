@@ -280,7 +280,7 @@ export function speakerSystem() {
 export function ipCode() {
   return calcView({
     init: { code: "IP54" },
-    inputs: (s, { field }) => [...section("Schutzart", [field("code", "IP-Code (z. B. IP54, IPX7)", "")])],
+    inputs: (s, { field }) => [...section("Schutzart", [field("code", "IP-Code (z. B. IP54, IPX7)", "", "text")])],
     compute: (s) => {
       const r = C.decodeIP(s.code);
       return [resultRow(`1. Ziffer (${r.d1})`, ""), msgRow(r.first ?? "nicht angegeben (X)", "hint"),

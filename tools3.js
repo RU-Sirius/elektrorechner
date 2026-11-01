@@ -13,7 +13,7 @@ const dur = (s) => {
 export function ipv4() {
   return calcView({
     init: { ip: "192.168.10.77", prefix: "26" },
-    inputs: (s, { field }) => [...section("Adresse", [field("ip", "IPv4-Adresse (auch a.b.c.d/nn)", ""), field("prefix", "Präfix oder Maske", "")])],
+    inputs: (s, { field }) => [...section("Adresse", [field("ip", "IPv4-Adresse (auch a.b.c.d/nn)", "", "text"), field("prefix", "Präfix oder Maske", "", "text")])],
     compute: (s) => {
       const r = N.ipv4Info(s.ip, s.ip.includes("/") ? undefined : s.prefix);
       return [resultRow("Netz", r.cidr), resultRow("Subnetzmaske", r.mask), resultRow("Wildcard-Maske", r.wildcard),
@@ -30,7 +30,7 @@ export function ipv4Subnetting() {
   return calcView({
     init: { net: "10.0.0.0/24", mode: "count", count: "5", hosts: "30" },
     inputs: (s, { field, set }) => [
-      ...section("Ausgangsnetz", [field("net", "Netz (a.b.c.d/nn)", "")]),
+      ...section("Ausgangsnetz", [field("net", "Netz (a.b.c.d/nn)", "", "text")]),
       ...section("Aufteilen nach", [segmented([["count", "Anzahl Netze"], ["hosts", "Hosts pro Netz"]], s.mode, (v) => set("mode", v)),
         s.mode === "count" ? field("count", "Benötigte Netze", "") : field("hosts", "Benötigte Hosts je Netz", "")]),
     ],
@@ -48,7 +48,7 @@ export function ipv4Subnetting() {
 export function ipv6() {
   return calcView({
     init: { ip: "2001:db8:abcd:12::1/48" },
-    inputs: (s, { field }) => [...section("Adresse", [field("ip", "IPv6-Adresse/Präfix", "")])],
+    inputs: (s, { field }) => [...section("Adresse", [field("ip", "IPv6-Adresse/Präfix", "", "text")])],
     compute: (s) => {
       const r = N.ipv6Info(s.ip);
       return [resultRow("Kurzform", r.compressed), msgRow(`Ausgeschrieben: ${r.expanded}`), resultRow("Netz", r.network, "good"),

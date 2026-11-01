@@ -35,7 +35,7 @@ Deinstallieren: in der App ⋮ → „ElektroRechner deinstallieren“ oder übe
 
 Die Anleitung steht auch in der App unter **„App installieren“**.
 
-## Funktionen (v1.5.2)
+## Funktionen (v1.6.0)
 
 **Grundlagen**
 - Ohmsches Gesetz & Leistung (zwei beliebige von U, I, R, P)
@@ -78,6 +78,21 @@ Die Anleitung steht auch in der App unter **„App installieren“**.
 - LED-Vorwiderstand, Widerstands-Farbcode, E-Reihen (E6/E12/E24)
 - Blindwiderstand & Resonanz, RC/RL-Zeitkonstante
 
+**Automatisierung: Regelungstechnik**
+- Regelkreis-Simulation: PTn-Strecke mit Totzeit, P/PI/PD/PID mit Stellgrößenbegrenzung, Sprungantwort als Diagramm, Überschwingen, Anstiegs- und Ausregelzeit
+- Frequenzgang (Bode) des offenen Kreises mit Phasen- und Amplitudenreserve
+- Reglereinstellung nach Ziegler-Nichols (Schwingungsversuch, Sprungantwort/Wendetangente, Regelbarkeit Tg/Tu)
+- PT2-Glied: Überschwingweite, Zeit bis Maximum, Anstiegs- und Einschwingzeit, Diagramm
+- PID-Parameter umrechnen (Kp/Tn/Tv ↔ Kp/Ki/Kd, digitale Koeffizienten q₀…q₂)
+
+**Automatisierung: Steuerungstechnik**
+- Analogwert-Skalierung (4–20 mA, 0–20 mA, 0–10 V, ±10 V ↔ Messwert ↔ SPS-Rohwert, z. B. S7 0…27648) und Bürde
+- Zahlensysteme: Dezimal/Hex/Binär, Zweierkomplement, Gray, BCD, REAL (IEEE 754)
+- Logik: Wahrheitstabelle und Minimierung (Quine-McCluskey)
+- Inkrementalgeber (Drehzahl ↔ Frequenz, Auswertung, Auflösung)
+- Frequenzumrichter: Synchrondrehzahl, Schlupf, U/f-Kennlinie
+- Pt100/Pt1000 nach IEC 60751 (Temperatur ↔ Widerstand)
+
 **Netzwerktechnik**
 - Speedtest: Download, Ping, Jitter gegen das GitHub-Pages-CDN (max. 8 s, Datenvolumen begrenzbar; kein Upload, da kein eigener Server)
 - IPv4-Subnetzrechner (Netz, Maske, Broadcast, Host-Bereich, Adresstyp)
@@ -108,6 +123,7 @@ geltenden Normen bzw. Herstellerunterlagen eingegeben.
 - `calc.js`: Rechenlogik · Tests: `node test.mjs`
 - `ui.js`: gemeinsame Bausteine · `tools.js`, `tools2.js`, `tools3.js`: Rechner · `net.js`: Netzwerk-Logik
 - `projects.js`: Favoriten, Projekte, Berichte · `pdf.js`: PDF-Erzeugung ohne externe Bibliothek
+- `auto.js`: Logik Regelungs-/Steuerungstechnik · `autotools.js`: Ansichten · `chart.js`: SVG-Diagramme
 - `speedtest.js` + `speedtest/`: Speedtest mit Zufallsdaten-Testdateien (werden vom Service Worker bewusst nicht gecacht)
 - `app.js`, `index.html`, `style.css`: Startseite, Routing, Darstellung
 - `sw.js`: Offline-Cache. **Nach Änderungen `CACHE`-Version erhöhen.**

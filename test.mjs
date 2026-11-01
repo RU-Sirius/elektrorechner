@@ -113,3 +113,45 @@ near(N.transferTime({ bytes: 50e9, rate: 100e6, efficiency: 0.9 }), 4444.4444444
 r = N.poeBudget({ devices: [{ type: "at", count: 8 }, { type: "af", count: 4 }], budget: 370 }); near(r.sum, 301.6, 1e-9); assert.ok(r.ok);
 r = N.fiberBudget({ tx: -3, rx: -28, length: 2, att: 0.35, nConn: 2, lossConn: 0.75, nSplice: 4, lossSplice: 0.1, margin: 3 }); near(r.loss, 5.6, 1e-9); near(r.reserve, 19.4, 1e-9);
 console.log("Netzwerk-Tests bestanden.");
+
+// ---------- Automatisierung (Referenz: Python / exakte Lösungen) ----------
+const AU = await import("./auto.js");
+near(AU.rtdResistance(100), 138.5055, 1e-9); near(AU.rtdResistance(-100), 60.25584, 1e-9); near(AU.rtdResistance(25, 1000), 1097.3465625, 1e-7);
+near(AU.rtdTemperature(138.5055), 100, 1e-7); near(AU.rtdTemperature(60.25584), -100, 1e-6); near(AU.rtdTemperature(AU.rtdResistance(-180)), -180, 1e-6);
+r = AU.znOscillation({ kkrit: 5, tkrit: 10 }); near(r.P.kp, 2.5); near(r.PI.kp, 2.25); near(r.PI.tn, 8.5); near(r.PID.kp, 3); near(r.PID.tn, 5); near(r.PID.tv, 1.2);
+r = AU.znStep({ tu: 2, tg: 20, ks: 1.5 }); near(r.P.kp, 6.666666666666667); near(r.PI.kp, 6); near(r.PI.tn, 6.66); near(r.PID.kp, 8); near(r.PID.tn, 4); near(r.PID.tv, 1); near(r.ratio, 10);
+r = AU.pidForms({ kp: 2, tn: 4, tv: 0.5, ts: 0.1 }); near(r.ki, 0.5); near(r.kd, 1); near(r.q0, 12.05); near(r.q1, -22); near(r.q2, 10);
+r = AU.pidFromParallel({ kp: 2, ki: 0.5, kd: 1 }); near(r.tn, 4); near(r.tv, 0.5);
+r = AU.pt2({ w0: 2, d: 0.5 }); near(r.overshoot, 16.303353482158048, 0.05); near(r.tPeak, 1.8137993642342178, 0.01); near(r.analytic.overshoot, 16.303353482158048, 1e-9);
+// P-Regler an PT1: y(0,2 s) = 0,8·(1 − e^−1), y∞ = 0,8
+r = AU.simulateLoop({ ks: 1, t1: 1, type: "P", kp: 4, tEnd: 3 });
+// exakte Lösung y(t) = 0,8·(1 − e^(−5t)) an mehreren Abtastpunkten vergleichen
+for (const tq of [0.1, 0.2, 0.5, 1]) { const i = r.t.findIndex((x) => x >= tq); near(r.y[i], 0.8 * (1 - Math.exp(-5 * r.t[i])), 2e-3); }
+near(r.yEnd, 0.8, 1e-3);
+r = AU.simulateLoop({ ks: 2, t1: 1, n: 2, tt: 0.3, type: "PI", kp: 0.5, tn: 2, tEnd: 40 }); near(r.yEnd, 1, 1e-3);
+r = AU.simulateLoop({ ks: 1.5, t1: 2, n: 3, mode: "open", tEnd: 60 }); near(r.yEnd, 1.5, 1e-3);
+r = AU.openLoopBode({ ks: 1, t1: 1, n: 1, tt: 0.2, type: "PI", kp: 2, tn: 1, points: 4000 }); near(r.wc, 2, 2e-3); near(r.pm, 67.08168819476707, 0.05);
+r = AU.analogScale({ signal: "4-20mA", from: "signal", value: 12, pMin: 0, pMax: 10, rMin: 0, rMax: 27648 }); near(r.phys, 5); near(r.raw, 13824);
+near(AU.analogScale({ signal: "4-20mA", from: "raw", value: 27648, pMin: 0, pMax: 10, rMin: 0, rMax: 27648 }).signal, 20);
+near(AU.loopBurden({ supply: 24, uMin: 8 }), 800);
+r = AU.numberSystems({ text: "1234", base: 16, bits: 16 }); assert.equal(r.unsigned, 4660n); assert.equal(r.bcdDecoded, 1234);
+r = AU.numberSystems({ text: "-1", base: 10, bits: 16 }); assert.equal(r.hex, "FFFF"); assert.equal(r.signed, -1n);
+r = AU.numberSystems({ text: "5", base: 10, bits: 8 }); assert.equal(r.gray, "0000 0111"); assert.equal(r.bcdEncoded, "05");
+assert.throws(() => AU.numberSystems({ text: "256", base: 10, bits: 8 }));
+assert.equal(AU.realToHex(1.5), "3FC00000"); assert.equal(AU.realToHex(-0.1), "BDCCCCCD"); near(AU.hexToReal("3FC00000"), 1.5);
+r = AU.truthTable("A&B | A&!B"); assert.deepEqual(r.vars, ["A", "B"]); assert.deepEqual(r.minterms, [2, 3]); assert.equal(AU.minimize(r.vars, r.minterms), "A");
+r = AU.truthTable("(!A&!B&!C)|(!A&B&!C)|(A&!B&!C)|(A&B&!C)"); assert.equal(AU.minimize(r.vars, r.minterms), "!C");
+r = AU.truthTable("A UND (B ODER NICHT C)"); assert.deepEqual(r.minterms, [4, 6, 7]);
+r = AU.truthTable("A ^ B"); assert.equal(AU.minimize(r.vars, r.minterms), "A&!B | !A&B");
+// Minimierung muss äquivalent sein: zufällige Funktionen prüfen
+for (let trial = 0; trial < 200; trial++) {
+  const ms = [...Array(16).keys()].filter(() => Math.random() < 0.5);
+  const expr = AU.minimize(["A", "B", "C", "D"], ms);
+  const back = expr === "0" ? [] : expr === "1" ? [...Array(16).keys()] : AU.truthTable(expr + " | A&!A | B&!B | C&!C | D&!D").minterms;
+  assert.deepEqual(back, ms, `Minimierung falsch für ${ms} → ${expr}`);
+}
+assert.throws(() => AU.truthTable("A & & B"));
+r = AU.encoder({ ppr: 1024, rpm: 1500, factor: 4, lead: 5 }); near(r.freq, 25600); near(r.edges, 102400); near(r.mmPerCount, 5 / 4096);
+r = AU.vfd({ f: 50, p: 2, slip: 3 }); near(r.nSync, 1500); near(r.n, 1455);
+near(AU.vfd({ f: 35, p: 2, un: 400, fn: 50 }).u, 280); near(AU.slipFromNameplate({ f: 50, p: 2, nRated: 1455 }).slip, 3, 1e-12);
+console.log("Automatisierungs-Tests bestanden.");
