@@ -132,4 +132,4 @@ Hosting: jeder statische HTTPS-Host (hier GitHub Pages).
 
 ## Haftung & Lizenz
 Kostenloses Hilfsmittel ohne Gewähr; Ergebnisse dienen nur der Orientierung und ersetzen keine normgerechte Planung,
-Bemessung und Prüfung durch eine Elektrofachkraft. Lizenz: MIT (siehe `LICENSE`). Built by R. U. Sirius?
+Bemessung und Prüfung durch eine Elektrofachkraft. Lizenz: MIT (siehe `LICENSE`). Built by Lukas Kopp

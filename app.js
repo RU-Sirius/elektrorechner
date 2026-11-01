@@ -95,7 +95,7 @@ function home() {
     ...section("", [navRow("projects", `Projekte & gespeicherte Berechnungen${nSaved ? ` (${nSaved})` : ""}`, "#8e8e93", "📁")]),
     ...GROUPS.flatMap(([title, keys]) => section(title, keys.map(nav))),
     ...section("", [navRow("install", "App installieren (iPhone, iPad, Mac)", "#8e8e93", "⤓"), navRow("settings", "Einstellungen", "#8e8e93", "⚙")]),
-    h("div", { class: "credit" }, "Built by R. U. Sirius?"),
+    h("div", { class: "credit" }, "Built by Lukas Kopp"),
   ];
 }
 
@@ -255,7 +255,7 @@ function settingsView() {
     ], "Wird für die Farbmarkierung und als Vorgabe beim Mindestquerschnitt verwendet. Welcher Grenzwert gilt, hängt von der Anlage und den anzuwendenden Regeln ab."),
     ...section("Haftungshinweis", [h("div", { class: "row" }, h("span", { class: "hint" }, LEGAL))]),
     ...section("Hinweis zu Leitungsberechnungen", [h("div", { class: "row" }, h("span", { class: "hint" }, DISCLAIMER))]),
-    ...section("", [resultRow("Version", "1.6.0 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
+    ...section("", [resultRow("Version", "1.6.1 (Web)"), resultRow("Entwickelt von", "Lukas Kopp"), resultRow("Lizenz", "MIT")]),
   ];
 }
 
@@ -282,7 +282,7 @@ function route() {
   view.replaceChildren(...nodes);
   setPreset(null); // nicht verbrauchte Voreinstellung verwerfen
   if (isTool && !["tables", "nettables"].includes(key)) {
-    view.append(saveBar(key, title, view), h("div", { class: "print-only" }, `ElektroRechner – Built by R. U. Sirius? · ${LEGAL}`));
+    view.append(saveBar(key, title, view), h("div", { class: "print-only" }, `ElektroRechner – Built by Lukas Kopp · ${LEGAL}`));
   }
   window.scrollTo(0, 0);
 }
