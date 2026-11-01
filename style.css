@@ -100,3 +100,10 @@ button.action { width: 100%; border: 0; background: none; font: inherit; color: 
 .pp-text { width: 100%; font: inherit; font-size: 15px; border: 0; background: transparent; color: var(--text); resize: vertical; outline: none; }
 .row input[type="date"] { font: inherit; background: transparent; color: var(--text); border: 0; text-align: right; }
 .pp-info:has(.pp-detail:empty) { display: none; }
+/* Schmale Bildschirme: lange Auswahltexte und Eingaben nicht über den Rand schieben */
+.row { min-width: 0; }
+.row .label { min-width: 0; overflow-wrap: anywhere; }
+.row select { min-width: 0; max-width: 60%; flex: 0 1 auto; text-overflow: ellipsis; overflow: hidden; }
+.row input { min-width: 0; }
+.row.wide input { width: auto; flex: 1 1 8em; max-width: 11em; }
+.row .hint, .row .value, .footer, .msg { overflow-wrap: anywhere; }

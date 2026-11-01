@@ -1,5 +1,5 @@
 import * as C from "./calc.js";
-import { LEGAL, DISCLAIMER, settings, h, section, inputRow, resultRow, msgRow, selectRow, segmented, navRow } from "./ui.js";
+import { LEGAL, DISCLAIMER, settings, h, section, inputRow, resultRow, msgRow, selectRow, segmented, navRow, keyboardMode, setKeyboardMode } from "./ui.js";
 import * as T from "./tools.js";
 import * as T2 from "./tools2.js";
 import * as T3 from "./tools3.js";
@@ -276,6 +276,8 @@ function settingsView() {
   const opts = [];
   for (let v = 0.5; v <= 10; v += 0.5) opts.push([String(v), C.fmt(v) + " %"]);
   return [
+    ...section("Eingabe", [segmented([["num", "Ziffernblock"], ["full", "Volle Tastatur"]], keyboardMode(), (v) => { setKeyboardMode(v); route(); })],
+      "Tastatur für Zahlenfelder auf iPhone und iPad. Der Ziffernblock hat kein Minuszeichen und keine Buchstaben – für negative Werte, Präfixe (z. B. 4,7k) oder Ausdrücke (2pi, 1/3) die volle Tastatur wählen. Formel- und Textfelder nutzen immer die volle Tastatur."),
     ...section("Berechnung", [
       selectRow("Grenzwert Spannungsfall", opts, String(settings.maxPercent), (e) => (settings.maxPercent = Number(e.target.value))),
     ], "Wird für die Farbmarkierung und als Vorgabe beim Mindestquerschnitt verwendet. Welcher Grenzwert gilt, hängt von der Anlage und den anzuwendenden Regeln ab."),
@@ -283,7 +285,7 @@ function settingsView() {
     ...section("Haftungshinweis", [h("div", { class: "row" }, h("span", { class: "hint" }, LEGAL))]),
     ...section("Hinweis zu Leitungsberechnungen", [h("div", { class: "row" }, h("span", { class: "hint" }, DISCLAIMER))]),
     ...X.appsSection(),
-    ...section("", [resultRow("Version", "1.9.0 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
+    ...section("", [resultRow("Version", "1.9.1 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
   ];
 }
 

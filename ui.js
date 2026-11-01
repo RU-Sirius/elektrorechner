@@ -30,11 +30,18 @@ export const section = (title, rows, footer) => [
   footer ? h("div", { class: "footer" }, footer) : null,
 ].filter(Boolean);
 // mode: "decimal" (Zahlentastatur) oder "text" (volle Tastatur, z. B. für IP-Adressen, Hex, Logik).
-export const inputRow = (label, unit, value, oninput, id, mode = "decimal") =>
-  h("label", { class: "row" + (mode === "text" ? " wide" : "") }, h("span", { class: "label" }, label),
-    h("input", { type: "text", inputmode: mode, value, placeholder: "–", id, oninput, autocomplete: "off",
-                 autocapitalize: mode === "text" ? "off" : undefined, autocorrect: mode === "text" ? "off" : undefined, spellcheck: mode === "text" ? "false" : undefined }),
+// Tastatur für Zahlenfelder: „num“ = Ziffernblock (ohne Minus/Buchstaben auf dem iPhone), „full“ = volle Tastatur
+const KBD_KEY = "keyboard";
+export const keyboardMode = () => localStorage.getItem(KBD_KEY) || "num";
+export const setKeyboardMode = (m) => localStorage.setItem(KBD_KEY, m);
+// mode: "decimal" (Zahl – Tastatur laut Einstellung) oder "text" (immer volle Tastatur, z. B. Formeln, IP-Adressen, Hex)
+export const inputRow = (label, unit, value, oninput, id, mode = "decimal") => {
+  const full = mode === "text" || keyboardMode() === "full";
+  return h("label", { class: "row" + (mode === "text" ? " wide" : "") }, h("span", { class: "label" }, label),
+    h("input", { type: "text", inputmode: full ? "text" : "decimal", value, placeholder: "–", id, oninput, autocomplete: "off",
+                 autocapitalize: full ? "off" : undefined, autocorrect: full ? "off" : undefined, spellcheck: full ? "false" : undefined }),
     h("span", { class: "unit" }, unit));
+};
 export const resultRow = (label, value, cls = "") =>
   h("div", { class: "row" }, h("span", { class: "label" }, label), h("span", { class: "value " + cls }, value));
 export const msgRow = (text, cls = "hint") => h("div", { class: "row" }, h("span", { class: cls }, text));
@@ -75,7 +82,10 @@ export function calcView({ init, inputs, compute, resultTitle = "Ergebnis", foot
     let rows;
     try { rows = compute(s, C.parse); }
     catch (e) { rows = [msgRow(e.message === "range" ? rangeMsg : ERRORS[e.message] ?? ERRORS.positive)]; }
-    resultBox.replaceChildren(...section(resultTitle, rows.filter(Boolean)));
+    rows = rows.filter(Boolean);
+    // Überlauf (z. B. 1e300) nicht als „NaN“/„Infinity“ anzeigen
+    if (rows.some((r) => /\bNaN\b|Infinity/.test(r.textContent ?? ""))) rows = [msgRow(rangeMsg)];
+    resultBox.replaceChildren(...section(resultTitle, rows));
   };
   const renderAll = () => {
     container.replaceChildren(...inputs(s, { field, set }), resultBox,
