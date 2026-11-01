@@ -35,7 +35,7 @@ Deinstallieren: in der App ⋮ → „ElektroRechner deinstallieren“ oder übe
 
 Die Anleitung steht auch in der App unter **„App installieren“**.
 
-## Funktionen (v1.4.2)
+## Funktionen (v1.5.0)
 
 **Grundlagen**
 - Ohmsches Gesetz & Leistung (zwei beliebige von U, I, R, P)
@@ -79,6 +79,7 @@ Die Anleitung steht auch in der App unter **„App installieren“**.
 - Blindwiderstand & Resonanz, RC/RL-Zeitkonstante
 
 **Netzwerktechnik**
+- Speedtest: Download, Ping, Jitter gegen das GitHub-Pages-CDN (max. 8 s, Datenvolumen begrenzbar; kein Upload, da kein eigener Server)
 - IPv4-Subnetzrechner (Netz, Maske, Broadcast, Host-Bereich, Adresstyp)
 - IPv4-Subnetting (nach Anzahl Netze oder Hosts pro Netz)
 - IPv6-Adressen & Präfixe (Kurzform nach RFC 5952, Anzahl /64-Netze)
@@ -107,6 +108,7 @@ geltenden Normen bzw. Herstellerunterlagen eingegeben.
 - `calc.js`: Rechenlogik · Tests: `node test.mjs`
 - `ui.js`: gemeinsame Bausteine · `tools.js`, `tools2.js`, `tools3.js`: Rechner · `net.js`: Netzwerk-Logik
 - `projects.js`: Favoriten, Projekte, Berichte · `pdf.js`: PDF-Erzeugung ohne externe Bibliothek
+- `speedtest.js` + `speedtest/`: Speedtest mit Zufallsdaten-Testdateien (werden vom Service Worker bewusst nicht gecacht)
 - `app.js`, `index.html`, `style.css`: Startseite, Routing, Darstellung
 - `sw.js`: Offline-Cache. **Nach Änderungen `CACHE`-Version erhöhen.**
 

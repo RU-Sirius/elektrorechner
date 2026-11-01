@@ -4,6 +4,7 @@ import * as T from "./tools.js";
 import * as T2 from "./tools2.js";
 import * as T3 from "./tools3.js";
 import { installView } from "./install.js";
+import { speedtestView } from "./speedtest.js";
 import { favorites, saveBar, projectsView, reportView, saves } from "./projects.js";
 import { clearCurrentState, setPreset } from "./ui.js";
 
@@ -48,6 +49,7 @@ const TOOLS = {
   eseries: ["E-Reihen-Normwerte", "E-Reihen", L, "E", T.eSeriesView],
   reactance: ["Blindwiderstand & Resonanz", "Blindwiderstand", L, "X", T.reactance],
   tau: ["RC/RL-Zeitkonstante", "Zeitkonstante", L, "τ", T.timeConstant],
+  speed: ["Speedtest (Download, Ping)", "Speedtest", "#30b0c7", "⏱", speedtestView],
   ipv4: ["IPv4-Subnetzrechner", "IPv4-Subnetz", "#30b0c7", "v4", T3.ipv4],
   subnetting: ["IPv4-Subnetting (Netz aufteilen)", "Subnetting", "#30b0c7", "⊞", T3.ipv4Subnetting],
   ipv6: ["IPv6-Adressen & Präfixe", "IPv6", "#30b0c7", "v6", T3.ipv6],
@@ -67,7 +69,7 @@ const GROUPS = [
   ["Photovoltaik & Speicher", ["pvstring", "pvyield", "battery"]],
   ["Sicherheitstechnik", ["emlight", "alarm", "saa"]],
   ["Elektronik", ["led", "resistor", "eseries", "reactance", "tau"]],
-  ["Netzwerktechnik", ["ipv4", "subnetting", "ipv6", "transfer", "poe", "fiber", "nettables"]],
+  ["Netzwerktechnik", ["speed", "ipv4", "subnetting", "ipv6", "transfer", "poe", "fiber", "nettables"]],
   ["Nachschlagen", ["ip", "tables"]],
 ];
 
@@ -239,7 +241,7 @@ function settingsView() {
     ], "Wird für die Farbmarkierung und als Vorgabe beim Mindestquerschnitt verwendet. Welcher Grenzwert gilt, hängt von der Anlage und den anzuwendenden Regeln ab."),
     ...section("Haftungshinweis", [h("div", { class: "row" }, h("span", { class: "hint" }, LEGAL))]),
     ...section("Hinweis zu Leitungsberechnungen", [h("div", { class: "row" }, h("span", { class: "hint" }, DISCLAIMER))]),
-    ...section("", [resultRow("Version", "1.4.2 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
+    ...section("", [resultRow("Version", "1.5.0 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
   ];
 }
 

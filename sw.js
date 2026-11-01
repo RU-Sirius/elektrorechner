@@ -1,6 +1,6 @@
 // Offline-Cache. Bei Änderungen an den Dateien die Versionsnummer erhöhen.
-const CACHE = "elektrorechner-v11";
-const FILES = ["index.html", "style.css", "app.js", "calc.js", "ui.js", "tools.js", "tools2.js", "projects.js", "tools3.js", "net.js", "pdf.js", "install.js", "manifest.webmanifest",
+const CACHE = "elektrorechner-v12";
+const FILES = ["index.html", "style.css", "app.js", "calc.js", "ui.js", "tools.js", "tools2.js", "projects.js", "tools3.js", "net.js", "pdf.js", "install.js", "speedtest.js", "manifest.webmanifest",
                "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png"];
 
 self.addEventListener("install", (e) => {
@@ -15,6 +15,8 @@ self.addEventListener("activate", (e) => {
 // Seitenaufrufe (auch ".../elektro-rechner/") fallen immer auf index.html zurück.
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
+  // Speedtest-Dateien nie über den Offline-Cache leiten – sonst würde der Cache gemessen.
+  if (new URL(e.request.url).pathname.includes("/speedtest/")) return;
   const isPage = e.request.mode === "navigate";
   e.respondWith(
     // no-cache: immer beim Server nachfragen (ETag), nie veraltete Browser-Kopie nutzen
