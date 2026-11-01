@@ -3,11 +3,14 @@ import { LEGAL, DISCLAIMER, settings, h, section, inputRow, resultRow, msgRow, s
 import * as T from "./tools.js";
 import * as T2 from "./tools2.js";
 import * as T3 from "./tools3.js";
+import * as T4 from "./tools4.js";
 import { installView } from "./install.js";
 import * as AT from "./autotools.js";
 import { speedtestView } from "./speedtest.js";
 import { favorites, saveBar, projectsView, reportView, saves } from "./projects.js";
 import { clearCurrentState, setPreset } from "./ui.js";
+import { createExtras } from "./extras.js";
+const X = createExtras("elektro");
 
 const view = document.getElementById("view");
 const header = document.querySelector("header");
@@ -31,6 +34,9 @@ const TOOLS = {
   wire: ["Leitungswiderstand & Temperatur", "Leitungswiderstand", E, "ϑ", T.wireResistance],
   comp: ["Blindleistungskompensation", "Kompensation", E, "C", T.compensation],
   stardelta: ["Stern-Dreieck-Umrechnung", "Stern-Dreieck", E, "Y", T.starDelta],
+  motor: ["Motoranlauf & Motorschutz", "Motoranlauf", E, "M", T4.motorStart],
+  lighting: ["Beleuchtung (Wirkungsgradverfahren)", "Beleuchtung", N, "💡", T4.lighting],
+  measure: ["Messwerte prüfen (Protokoll-Hilfe)", "Messprotokoll", S, "✓", T4.measurement],
   overload: ["Schutzorgan / Absicherung", "Schutzorgan", S, "⚡", T2.overload],
   loop: ["Schleifenimpedanz & Abschaltbedingung", "Schleifenimpedanz", S, "Zs", T2.loop],
   ik: ["Kurzschlussstrom", "Kurzschlussstrom", S, "Ik", T2.shortCircuit],
@@ -75,9 +81,9 @@ const TOOLS = {
 const nav = (key) => navRow(key, TOOLS[key][0], TOOLS[key][2], TOOLS[key][3]);
 const GROUPS = [
   ["Grundlagen", ["ohm", "combine", "divider", "db"]],
-  ["Leitungen & Energietechnik", ["power", "section", "drop", "maxlen", "wire", "comp", "stardelta"]],
-  ["Schutztechnik & Einspeisung", ["overload", "loop", "ik", "selectivity", "feeder", "trafo"]],
-  ["Anschlüsse", ["site", "ev"]],
+  ["Leitungen & Energietechnik", ["power", "section", "drop", "maxlen", "wire", "comp", "stardelta", "motor"]],
+  ["Schutztechnik & Einspeisung", ["overload", "loop", "ik", "selectivity", "feeder", "trafo", "measure"]],
+  ["Anschlüsse & Beleuchtung", ["site", "ev", "lighting"]],
   ["Photovoltaik & Speicher", ["pvstring", "pvyield", "battery"]],
   ["Sicherheitstechnik", ["emlight", "alarm", "saa"]],
   ["Elektronik", ["led", "resistor", "eseries", "reactance", "tau"]],
@@ -90,14 +96,25 @@ const GROUPS = [
 function home() {
   const favs = favorites.list().filter((k) => k in TOOLS);
   const nSaved = saves.list().length;
-  return [
+  const rec = X.recent.list().filter((k) => k in TOOLS && !favs.includes(k)).slice(0, 4);
+  return X.withSearch([
     ...(favs.length ? section("★ Favoriten", favs.map(nav)) : []),
+    ...(rec.length ? section("Zuletzt verwendet", rec.map(nav)) : []),
     ...section("", [navRow("projects", `Projekte & gespeicherte Berechnungen${nSaved ? ` (${nSaved})` : ""}`, "#8e8e93", "📁")]),
     ...GROUPS.flatMap(([title, keys]) => section(title, keys.map(nav))),
     ...section("", [navRow("install", "App installieren (iPhone, iPad, Mac)", "#8e8e93", "⤓"), navRow("settings", "Einstellungen", "#8e8e93", "⚙")]),
     h("div", { class: "credit" }, "Built by R. U. Sirius?"),
-  ];
+  ], { tools: TOOLS, groups: GROUPS, nav, extra: SEARCH_EXTRA });
 }
+// Zusätzliche Suchbegriffe (Synonyme, Abkürzungen)
+const SEARCH_EXTRA = { ohm: "spannung strom widerstand leistung", section: "querschnitt kabel leitung mm2", drop: "spannungsabfall delta u kabel", maxlen: "kabellaenge",
+  overload: "sicherung ls absicherung ueberlast", loop: "zs abschaltung schleife ls", ik: "kurzschluss", feeder: "unterverteilung zuleitung", trafo: "transformator",
+  site: "baustelle baustrom", ev: "wallbox laden e auto elektroauto", pvstring: "photovoltaik solar modul wechselrichter", pvyield: "photovoltaik solar ertrag", battery: "akku speicher kapazitaet",
+  emlight: "notbeleuchtung", alarm: "brandmelde einbruchmelde", saa: "sprachalarm ela lautsprecher", resistor: "farbringe", reactance: "kondensator spule xl xc",
+  loopsim: "regler pid regelung", bode: "regelung stabilitaet", zn: "regler pid einstellen", analog: "4 20 ma sps s7 skalieren", numbers: "hex binaer bcd gray float ieee",
+  logic: "kv diagramm boolesche wahrheitstabelle", vfd: "fu umrichter motor drehzahl", rtd: "temperatur fuehler pt100", speed: "internet geschwindigkeit",
+  ipv4: "subnetz maske netzwerk cidr", subnetting: "subnetz aufteilen", poe: "power over ethernet", fiber: "glasfaser lwl", nettables: "kabel cat ethernet", ip: "schutzart", tables: "werte tabelle",
+  motor: "anlauf stern dreieck sanftanlauf motorschutz anlaufstrom", lighting: "licht lux leuchten lichtplanung", measure: "pruefung messung protokoll vde 0100 600 isolation rcd fi" };
 
 function ohmView() {
   const s = { u: "", i: "", r: "", p: "" };
@@ -253,9 +270,11 @@ function settingsView() {
     ...section("Berechnung", [
       selectRow("Grenzwert Spannungsfall", opts, String(settings.maxPercent), (e) => (settings.maxPercent = Number(e.target.value))),
     ], "Wird für die Farbmarkierung und als Vorgabe beim Mindestquerschnitt verwendet. Welcher Grenzwert gilt, hängt von der Anlage und den anzuwendenden Regeln ab."),
+    ...X.backupSection(),
     ...section("Haftungshinweis", [h("div", { class: "row" }, h("span", { class: "hint" }, LEGAL))]),
     ...section("Hinweis zu Leitungsberechnungen", [h("div", { class: "row" }, h("span", { class: "hint" }, DISCLAIMER))]),
-    ...section("", [resultRow("Version", "1.6.2 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
+    ...X.appsSection(),
+    ...section("", [resultRow("Version", "1.7.0 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
   ];
 }
 
@@ -265,7 +284,7 @@ function route() {
   const [key, arg] = location.hash.slice(1).split("/");
   clearCurrentState();
   let title, nodes, isTool = false;
-  if (key in TOOLS) { title = TOOLS[key][1]; nodes = TOOLS[key][4](); isTool = true; }
+  if (key in TOOLS) { title = TOOLS[key][1]; nodes = TOOLS[key][4](); isTool = true; X.recent.track(key); }
   else if (key in PAGES) { title = PAGES[key][0]; nodes = PAGES[key][1](); }
   else if (key === "report" && arg) { title = "Projektbericht"; nodes = reportView(decodeURIComponent(arg)); }
   else { title = "ElektroRechner"; nodes = home(); }

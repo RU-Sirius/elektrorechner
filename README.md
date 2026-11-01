@@ -35,7 +35,7 @@ Deinstallieren: in der App ⋮ → „ElektroRechner deinstallieren“ oder übe
 
 Die Anleitung steht auch in der App unter **„App installieren“**.
 
-## Funktionen (v1.6.0)
+## Funktionen (v1.7.0)
 
 **Grundlagen**
 - Ohmsches Gesetz & Leistung (zwei beliebige von U, I, R, P)
@@ -51,6 +51,7 @@ Die Anleitung steht auch in der App unter **„App installieren“**.
 - Leitungswiderstand bei Betriebstemperatur
 - Blindleistungskompensation (1~, 3~ Stern/Dreieck)
 - Stern-Dreieck-Umrechnung
+- Motoranlauf & Motorschutz: Bemessungsstrom, Anlaufstrom und -moment bei Direkt-, Stern-Dreieck- und Sanftanlauf, Einstellwert Motorschutzrelais (I_N bzw. I_N/√3)
 
 **Schutztechnik & Einspeisung**
 - Schutzorgan / Absicherung: Ib ≤ In ≤ Iz und I₂ ≤ 1,45·Iz (Iz wird eingegeben)
@@ -59,10 +60,12 @@ Die Anleitung steht auch in der App unter **„App installieren“**.
 - Selektivität von gG-Sicherungen (Nennstromverhältnis ≥ 1,6 : 1)
 - UVT-Zuleitung: Gesamtprüfung Überlast, Spannungsfall, Abschaltung
 - Trafo- & Einspeiseberechnung (In, Ik3, Zk, Auslastung)
+- Messwerte prüfen (Protokoll-Hilfe): bis zu 12 Stromkreise mit Schutzorgan (z. B. B16), Zs, R_iso, RCD-Auslösezeit und -strom gegen vom Anwender festgelegte Grenzwerte; Dokumentation per PDF
 
-**Anschlüsse**
+**Anschlüsse & Beleuchtung**
 - Baustromanschluss (Leistungsbilanz mit Gleichzeitigkeit → Bemessungsstrom)
 - Ladeinfrastruktur (Ladepunkte, Gleichzeitigkeit, Ladezeit)
+- Beleuchtung nach dem Wirkungsgradverfahren: Leuchtenanzahl, erreichte Beleuchtungsstärke, Raumindex, Anschluss- und spezifische Leistung
 
 **Photovoltaik & Speicher**
 - PV-Stringauslegung mit Temperaturkorrektur
@@ -108,6 +111,10 @@ Die Anleitung steht auch in der App unter **„App installieren“**.
 - Tabellen & Praxiswerte (LS-Auslösebereiche, I₂, Abschaltzeiten, Nennquerschnitte, Bemessungsströme, κ/α, Normreihen)
 
 **Arbeiten mit der App**
+- **Suche** auf der Startseite (auch nach Synonymen, z. B. „Wallbox“, „FI“, „pq-Formel“); Enter öffnet den ersten Treffer
+- **Zuletzt verwendet**: die letzten Rechner oben auf der Startseite
+- **Datensicherung** (Einstellungen): Projekte, Favoriten und Einstellungen als Datei exportieren und wieder einspielen (iPhone: Teilen-Menü → „In Dateien sichern“)
+- **Weitere Apps** (Einstellungen): Links zu den anderen Rechnern der Reihe
 - Favoriten (☆ oben rechts in jedem Rechner)
 - Projekte: Berechnungen speichern, wieder öffnen, löschen
 - PDF-Ausgabe jeder Berechnung: wird in der App erzeugt und auf iPhone/iPad über das Teilen-Menü ausgegeben, am Computer heruntergeladen
@@ -121,7 +128,7 @@ geltenden Normen bzw. Herstellerunterlagen eingegeben.
 
 ## Entwicklung
 - `calc.js`: Rechenlogik · Tests: `node test.mjs`
-- `ui.js`: gemeinsame Bausteine · `tools.js`, `tools2.js`, `tools3.js`: Rechner · `net.js`: Netzwerk-Logik
+- `ui.js`: gemeinsame Bausteine · `tools.js`, `tools2.js`, `tools3.js`, `tools4.js`: Rechner · `calc4.js`: Logik Beleuchtung/Motor/Messwerte · `extras.js`: Suche, Zuletzt verwendet, Datensicherung (in allen drei Apps gleich) · `net.js`: Netzwerk-Logik
 - `projects.js`: Favoriten, Projekte, Berichte · `pdf.js`: PDF-Erzeugung ohne externe Bibliothek
 - `auto.js`: Logik Regelungs-/Steuerungstechnik · `autotools.js`: Ansichten · `chart.js`: SVG-Diagramme
 - `speedtest.js` + `speedtest/`: Speedtest mit Zufallsdaten-Testdateien (werden vom Service Worker bewusst nicht gecacht)

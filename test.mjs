@@ -155,3 +155,21 @@ r = AU.encoder({ ppr: 1024, rpm: 1500, factor: 4, lead: 5 }); near(r.freq, 25600
 r = AU.vfd({ f: 50, p: 2, slip: 3 }); near(r.nSync, 1500); near(r.n, 1455);
 near(AU.vfd({ f: 35, p: 2, un: 400, fn: 50 }).u, 280); near(AU.slipFromNameplate({ f: 50, p: 2, nRated: 1455 }).slip, 3, 1e-12);
 console.log("Automatisierungs-Tests bestanden.");
+// ---------- Beleuchtung, Motoranlauf, Messwerte ----------
+{
+  const C4 = await import("./calc4.js");
+  let r = C4.lighting({ a: 8, b: 6, h: 2, em: 500, phi: 4000, etaB: 0.6, mf: 0.8, pLum: 30 });
+  near(r.area, 48); near(r.k, 48 / 28); near(r.nExact, 12.5); assert.equal(r.n, 13); near(r.emReached, 520); near(r.pTotal, 390);
+  r = C4.motorStart({ p: 11000, u: 400, cos: 0.85, eta: 0.9, kI: 7, kM: 2.2, method: "direct" });
+  near(r.iN, 11000 / (Math.sqrt(3) * 400 * 0.85 * 0.9)); near(r.iA, 7 * r.iN); near(r.relay, r.iN);
+  const sd = C4.motorStart({ p: 11000, u: 400, cos: 0.85, eta: 0.9, kI: 7, kM: 2.2, method: "stardelta" });
+  near(sd.iA, 7 * r.iN / 3); near(sd.kMStart, 2.2 / 3); near(sd.relay, r.iN / Math.sqrt(3));
+  const sf = C4.motorStart({ p: 11000, u: 400, cos: 0.85, eta: 0.9, kI: 7, kM: 2.2, method: "soft", uStart: 0.5 });
+  near(sf.iA, 3.5 * r.iN); near(sf.kMStart, 0.55);
+  assert.deepEqual(C4.parseDevice("b16"), { type: "B", inn: 16, ia: 80 }); assert.equal(C4.parseDevice("X16"), null); near(C4.parseDevice("C 10 A").ia, 100);
+  const lim = { u0: 230, zsFactor: 1, risoMin: 1, tMax: 300, idn: 30 };
+  let c = C4.checkCircuit({ device: "B16", zs: 0.8, riso: 200, trcd: 25, ircd: 21 }, lim); near(c.zsMax, 2.875); assert.equal(c.status, true);
+  c = C4.checkCircuit({ device: "B16", zs: 3, riso: 0.5, trcd: null, ircd: null }, lim); assert.equal(c.zsOk, false); assert.equal(c.risoOk, false); assert.equal(c.status, false);
+  assert.equal(C4.checkCircuit({ device: "B16", zs: null, riso: null, trcd: null, ircd: null }, lim).status, null);
+  console.log("Beleuchtung/Motor/Messwerte ok.");
+}
