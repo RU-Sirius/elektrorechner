@@ -35,7 +35,7 @@ Deinstallieren: in der App ⋮ → „ElektroRechner deinstallieren“ oder übe
 
 Die Anleitung steht auch in der App unter **„App installieren“**.
 
-## Funktionen (v1.5.0)
+## Funktionen (v1.5.1)
 
 **Grundlagen**
 - Ohmsches Gesetz & Leistung (zwei beliebige von U, I, R, P)

@@ -7,13 +7,19 @@ const REPLACE = {
   "η": "eta", "κ": "kappa", "α": "alpha", "β": "beta", "Δ": "Delta ", "−": "-", "→": "->", "↔": "<->", "★": "*", "☆": "*",
   "₀": "0", "₁": "1", "₂": "2", "₃": "3", "₄": "4", "₅": "5", "₆": "6", "₇": "7", "₈": "8", "₉": "9", "ᵢ": "i", "ⱼ": "j",
   " ": " ", " ": " ", "⫴": "||", "⌀": "D",
+  "μ": "\u00b5", "σ": "sigma", "λ": "lambda", "ω": "omega", "ρ": "rho", "ν": "ny", "δ": "delta", "γ": "gamma", "ε": "eps", "Σ": "Summe ",
+  "≈": "~", "≠": "!=", "∞": "unendlich",
 };
 // Windows-1252: Sonderbelegung 0x80–0x9F.
 const CP1252 = { "€": 0x80, "‚": 0x82, "„": 0x84, "…": 0x85, "‘": 0x91, "’": 0x92, "“": 0x93, "”": 0x94, "•": 0x95, "–": 0x96, "—": 0x97, "™": 0x99 };
 
+// Hochgestellte Folgen, die nicht in Windows-1252 liegen (z. B. ⁻⁶), als „^-6“ schreiben; ² und ³ bleiben erhalten.
+const SUP = { "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9", "⁻": "-" };
+const supRuns = (t) => String(t).replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+/g, (m) => (/^[¹²³]+$/.test(m) ? m : "^" + [...m].map((c) => SUP[c]).join("")));
+
 function encode(text) {
   let out = "";
-  for (const ch of String(text)) {
+  for (const ch of supRuns(text)) {
     if (REPLACE[ch] !== undefined) { out += encode(REPLACE[ch]); continue; }
     const c = ch.codePointAt(0);
     let b;
