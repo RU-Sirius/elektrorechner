@@ -35,7 +35,7 @@ Deinstallieren: in der App ⋮ → „ElektroRechner deinstallieren“ oder übe
 
 Die Anleitung steht auch in der App unter **„App installieren“**.
 
-## Funktionen (v1.5.1)
+## Funktionen (v1.5.2)
 
 **Grundlagen**
 - Ohmsches Gesetz & Leistung (zwei beliebige von U, I, R, P)
@@ -86,7 +86,7 @@ Die Anleitung steht auch in der App unter **„App installieren“**.
 - Datenübertragung & Bandbreite
 - PoE-Leistungsbudget (IEEE 802.3af/at/bt)
 - LWL-Dämpfungsbudget
-- Netzwerk-Tabellen (Kabelkategorien, Ethernet-Längen, PoE, private Bereiche, Präfixe)
+- Netzwerk-Tabellen (Kabelkategorien mit max. Ethernet-Datenrate, Ethernet-Längen, PoE, private Bereiche, Präfixe)
 
 **Nachschlagen**
 - IP-Schutzarten (IEC 60529), IK-Stoßfestigkeit (IEC 62262)

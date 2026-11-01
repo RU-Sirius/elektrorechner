@@ -124,8 +124,12 @@ export function fiber() {
 export function networkTables() {
   const tbl = (title, rows, footer) => section(title, rows.map(([a, b]) => resultRow(a, b)), footer);
   return [
-    ...tbl("Kupfer-Datenkabel: Kategorie → Bandbreite", [["Cat 5e", "100 MHz"], ["Cat 6", "250 MHz"], ["Cat 6A", "500 MHz"], ["Cat 7", "600 MHz"], ["Cat 7A", "1000 MHz"], ["Cat 8", "2000 MHz"]],
-      "Kategorien nach TIA-568 bzw. Klassen nach ISO/IEC 11801 (Cat 7/7A nur ISO)."),
+    ...tbl("Kupfer-Datenkabel: Bandbreite · max. Ethernet-Datenrate", [
+      ["Cat 5e", "100 MHz · 2.500 Mbit/s"], ["Cat 6", "250 MHz · 5.000 Mbit/s (10.000 bis 55 m)"], ["Cat 6A", "500 MHz · 10.000 Mbit/s"],
+      ["Cat 7", "600 MHz · 10.000 Mbit/s"], ["Cat 7A", "1000 MHz · 10.000 Mbit/s"], ["Cat 8", "2000 MHz · 40.000 Mbit/s (bis 30 m)"]],
+      "Kategorien nach TIA-568 bzw. Klassen nach ISO/IEC 11801 (Cat 7/7A nur ISO). Datenraten der Ethernet-Standards nach IEEE 802.3 bei 100 m, " +
+      "sofern nicht anders angegeben: 1000BASE-T (1.000 Mbit/s) ab Cat 5e, 2.5GBASE-T ab Cat 5e, 5GBASE-T ab Cat 6, 10GBASE-T ab Cat 6A (auf Cat 6 bis 55 m), " +
+      "25G/40GBASE-T nur Cat 8 bis 30 m. Für Cat 7/7A gibt es keinen Ethernet-Standard oberhalb von 10.000 Mbit/s."),
     ...tbl("Twisted-Pair-Ethernet: max. Länge", [["Übertragungsstrecke (Channel)", "100 m"], ["davon fest verlegt (Permanent Link)", "90 m"], ["Patchkabel gesamt", "10 m"]],
       "Gilt für 10BASE-T bis 10GBASE-T mit passender Kategorie; 25G/40GBASE-T (Cat 8) nur bis 30 m."),
     ...tbl("PoE nach IEEE 802.3 (PSE / PD)", N.POE.map((t) => [t.name, `${C.fmt(t.pse, 1)} W / ${C.fmt(t.pd, 2)} W`]),
