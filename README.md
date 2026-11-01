@@ -3,9 +3,39 @@
 Offline-fähige Web-App (PWA) für Elektroniker, Elektroingenieure und das Elektrohandwerk.
 Kein Build-Schritt, keine Abhängigkeiten, keine Datenübertragung: Gespeicherte Berechnungen bleiben lokal im Browser.
 
-**App öffnen:** https://ru-sirius.github.io/elektrorechner/ – auf dem iPhone in Safari über *Teilen → Zum Home-Bildschirm* installieren.
+**App öffnen:** https://ru-sirius.github.io/elektrorechner/
 
-## Funktionen (v1.4.0)
+## Installation
+
+### iPhone & iPad (Safari)
+1. https://ru-sirius.github.io/elektrorechner/ in Safari öffnen.
+2. Auf das Teilen-Symbol tippen (Quadrat mit Pfeil nach oben; iPhone unten, iPad oben rechts).
+3. „Zum Home-Bildschirm“ wählen und mit „Hinzufügen“ bestätigen.
+4. Die App über das neue Symbol starten.
+
+Seit iOS 16.4 geht das auch aus anderen Browsern wie Chrome. Fehlt der Eintrag, in der Liste unten über „Aktionen bearbeiten“ hinzufügen.
+
+### Mac (Google Chrome)
+1. https://ru-sirius.github.io/elektrorechner/ in Chrome öffnen.
+2. Rechts in der Adressleiste auf das Installieren-Symbol klicken und „Installieren“ bestätigen.
+   Falls es fehlt: Menü ⋮ → „Streamen, speichern und teilen“ → „Seite als App installieren…“ (Bezeichnung je nach Chrome-Version).
+3. Die App öffnet sich im eigenen Fenster und liegt im Launchpad bzw. unter `~/Programme/Chrome-Apps`.
+   Im Dock behalten: Rechtsklick auf das Symbol → Optionen → „Im Dock behalten“.
+
+Deinstallieren: in der App ⋮ → „ElektroRechner deinstallieren“ oder über `chrome://apps`.
+
+### Mac (Safari, ab macOS 14 Sonoma)
+1. Seite in Safari öffnen.
+2. Menü „Ablage“ → „Zum Dock hinzufügen…“.
+
+### Gut zu wissen
+- Nach dem ersten Öffnen mit Internet funktioniert die App offline.
+- Updates kommen automatisch beim Öffnen mit Internetverbindung (Version unter *Einstellungen*).
+- Projekte und Favoriten bleiben auf dem jeweiligen Gerät und werden nicht zwischen Geräten abgeglichen.
+
+Die Anleitung steht auch in der App unter **„App installieren“**.
+
+## Funktionen (v1.4.1)
 
 **Grundlagen**
 - Ohmsches Gesetz & Leistung (zwei beliebige von U, I, R, P)

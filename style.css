@@ -63,3 +63,5 @@ button.action { width: 100%; border: 0; background: none; font: inherit; color: 
   .print-only { display: block; color: #444; font-size: 11px; margin: 16px; }
   input, select { appearance: none; -webkit-appearance: none; }
 }
+.steps { margin: 4px 0; padding-left: 22px; line-height: 1.45; }
+.steps li { margin: 4px 0; }

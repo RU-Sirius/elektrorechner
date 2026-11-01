@@ -3,6 +3,7 @@ import { LEGAL, DISCLAIMER, settings, h, section, inputRow, resultRow, msgRow, s
 import * as T from "./tools.js";
 import * as T2 from "./tools2.js";
 import * as T3 from "./tools3.js";
+import { installView } from "./install.js";
 import { favorites, saveBar, projectsView, reportView, saves } from "./projects.js";
 import { clearCurrentState, setPreset } from "./ui.js";
 
@@ -77,7 +78,7 @@ function home() {
     ...(favs.length ? section("★ Favoriten", favs.map(nav)) : []),
     ...section("", [navRow("projects", `Projekte & gespeicherte Berechnungen${nSaved ? ` (${nSaved})` : ""}`, "#8e8e93", "📁")]),
     ...GROUPS.flatMap(([title, keys]) => section(title, keys.map(nav))),
-    ...section("", [navRow("settings", "Einstellungen", "#8e8e93", "⚙")]),
+    ...section("", [navRow("install", "App installieren (iPhone, iPad, Mac)", "#8e8e93", "⤓"), navRow("settings", "Einstellungen", "#8e8e93", "⚙")]),
     h("div", { class: "credit" }, "Built by R. U. Sirius?"),
   ];
 }
@@ -238,12 +239,12 @@ function settingsView() {
     ], "Wird für die Farbmarkierung und als Vorgabe beim Mindestquerschnitt verwendet. Welcher Grenzwert gilt, hängt von der Anlage und den anzuwendenden Regeln ab."),
     ...section("Haftungshinweis", [h("div", { class: "row" }, h("span", { class: "hint" }, LEGAL))]),
     ...section("Hinweis zu Leitungsberechnungen", [h("div", { class: "row" }, h("span", { class: "hint" }, DISCLAIMER))]),
-    ...section("", [resultRow("Version", "1.4.0 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
+    ...section("", [resultRow("Version", "1.4.1 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
   ];
 }
 
 // ---------- Routing ----------
-const PAGES = { settings: ["Einstellungen", settingsView], projects: ["Projekte", projectsView] };
+const PAGES = { settings: ["Einstellungen", settingsView], projects: ["Projekte", projectsView], install: ["App installieren", installView] };
 function route() {
   const [key, arg] = location.hash.slice(1).split("/");
   clearCurrentState();
