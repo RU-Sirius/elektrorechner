@@ -1,5 +1,5 @@
 // Offline-Cache. Bei Änderungen an den Dateien die Versionsnummer erhöhen.
-const CACHE = "elektrorechner-v10";
+const CACHE = "elektrorechner-v11";
 const FILES = ["index.html", "style.css", "app.js", "calc.js", "ui.js", "tools.js", "tools2.js", "projects.js", "tools3.js", "net.js", "pdf.js", "install.js", "manifest.webmanifest",
                "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png"];
 

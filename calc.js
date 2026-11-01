@@ -386,7 +386,7 @@ export const IP_SECOND = {
   0: "Kein Schutz", 1: "Senkrecht fallende Wassertropfen", 2: "Fallende Tropfen bei bis zu 15° Neigung",
   3: "Sprühwasser (bis 60° gegen die Senkrechte)", 4: "Spritzwasser aus allen Richtungen", 5: "Strahlwasser",
   6: "Starkes Strahlwasser", 7: "Zeitweiliges Untertauchen", 8: "Dauerndes Untertauchen",
-  9: "Wasser bei Hochdruck-/Dampfstrahlreinigung",
+  9: "Hochdruck- und Dampfstrahlreinigung",
 };
 // Als Liste, damit die Reihenfolge IK00 … IK10 erhalten bleibt.
 export const IK_ENERGY = [["00", null], ["01", 0.14], ["02", 0.2], ["03", 0.35], ["04", 0.5], ["05", 0.7], ["06", 1], ["07", 2], ["08", 5], ["09", 10], ["10", 20]];
