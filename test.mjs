@@ -69,3 +69,22 @@ r = c.batterySize({ load: 0.5, hours: 8, dod: 0.9, eta: 0.95, voltage: 48 }); ne
 r = c.chargeTime({ capacity: 10, socFrom: 0.2, socTo: 0.8, power: 3, eta: 0.95 }); near(r.hours, 2.1052631578947376);
 assert.throws(() => c.chargeTime({ capacity: 10, socFrom: 0.8, socTo: 0.2, power: 3, eta: 0.95 }));
 console.log("PV-/Speichertests bestanden.");
+
+// ---------- Schutztechnik & Installation ----------
+r = c.loopImpedance({ zPre: 0.3, length: 30, section: 2.5, kappa: 56, alpha: 0.00393, temp: 70, u0: 230, c: 0.95, ia: 16 * c.MCB_TRIP.B });
+near(r.rLine, 0.5127857142857142); near(r.zs, 0.8127857142857142); near(r.ik, 268.8285438087706, 1e-6); assert.ok(r.ok); near(r.lMax, 142.2377768491434, 1e-6);
+near(c.maxLengthDrop({ system: "ac1", current: 16, voltage: 230, maxPercent: 3, cos: 1, kappa: 56, section: 2.5 }), 30.1875);
+r = c.overloadCheck({ ib: 14, inn: 16, iz: 20, k2: 1.45 }); assert.ok(r.c1 && r.c2 && r.c3);
+r = c.overloadCheck({ ib: 14, inn: 25, iz: 20, k2: 1.45 }); assert.ok(!r.c2);
+r = c.transformer({ sn: 630e3, un: 400, uk: 6 }); near(r.inn, 909.3266739736606, 1e-6); near(r.ik3, 15155.444566227678, 1e-5); near(r.zk, 0.015238095238095238);
+assert.ok(c.fuseSelectivity(63, 35).ok); assert.ok(!c.fuseSelectivity(50, 35).ok); assert.ok(c.fuseSelectivity(160, 100).ok);
+r = c.demand({ loads: [{ p: 2000, n: 3 }, { p: 11000, n: 1 }, { p: 3700, n: 4 }], g: 0.7, u: 400, system: "ac3", cos: 0.9 }); near(r.i, 35.69949164489186); assert.equal(r.rated, 40);
+r = c.demand({ loads: [{ p: 11000, n: 4 }], g: 0.8, u: 400, system: "ac3", cos: 1 }); near(r.i, 50.80682368868707); assert.equal(r.rated, 63);
+near(c.emergencyBattery({ p: 1500, hours: 3, u: 216, eta: 0.9, reserve: 1.25 }).ah, 28.935185185185187);
+near(c.alarmBattery({ iq: 0.25, tq: 72, ia: 1.2, ta: 0.5, reserve: 1.25 }).ah, 23.25);
+r = c.speakerLine({ taps: 240, reserve: 1.2, amp: 360, length: 200, section: 1.5, kappa: 56 }); near(r.lossDb, 0.9399312535244717); assert.ok(r.ok);
+r = c.decodeIP("IP54"); assert.match(r.first, /Staubgeschützt/); assert.match(r.second, /Strahlwasser|Spritzwasser/);
+assert.equal(c.decodeIP("ipx7").first, null); assert.throws(() => c.decodeIP("IP7"));
+console.log("Schutztechnik-Tests bestanden.");
+assert.deepEqual(c.IK_ENERGY.map(([k]) => k), ["00","01","02","03","04","05","06","07","08","09","10"]);
+console.log("IK-Reihenfolge ok.");

@@ -1,42 +1,73 @@
 import * as C from "./calc.js";
 import { LEGAL, DISCLAIMER, settings, h, section, inputRow, resultRow, msgRow, selectRow, segmented, navRow } from "./ui.js";
 import * as T from "./tools.js";
+import * as T2 from "./tools2.js";
+import { favorites, saveBar, projectsView, reportView, saves } from "./projects.js";
+import { clearCurrentState, setPreset } from "./ui.js";
 
 const view = document.getElementById("view");
 const header = document.querySelector("header");
 const titleEl = document.getElementById("title");
 const back = document.getElementById("back");
 back.onclick = () => (location.hash = "");
+const favBtn = document.getElementById("fav");
 
 // ---------- Ansichten ----------
+// Alle Rechner: Schlüssel → [Listenname, Kurztitel, Farbe, Symbol, Ansicht]
+const G = "#ff9500", E = "#34c759", S = "#ff3b30", P = "#ffcc00", L = "#5856d6", N = "#007aff";
+const TOOLS = {
+  ohm: ["Ohmsches Gesetz & Widerstand", "Ohmsches Gesetz", G, "Ω", ohmView],
+  combine: ["Reihen- & Parallelschaltung", "Reihe & Parallel", G, "⫴", T.combine],
+  divider: ["Spannungsteiler", "Spannungsteiler", G, "÷", T.voltageDivider],
+  db: ["Dezibel-Rechner", "Dezibel", G, "dB", T.decibel],
+  power: ["Strom aus Leistung / Leistung aus Strom", "Leistung", E, "P", T.acPower],
+  section: ["Leitungsberechnung (Querschnitt)", "Mindestquerschnitt", E, "⌀", () => cableView("section")],
+  drop: ["Spannungsfall", "Spannungsfall", E, "↘", () => cableView("drop")],
+  maxlen: ["Max. Leitungslänge (ΔU & Abschaltung)", "Max. Leitungslänge", E, "↔", T2.maxLength],
+  wire: ["Leitungswiderstand & Temperatur", "Leitungswiderstand", E, "ϑ", T.wireResistance],
+  comp: ["Blindleistungskompensation", "Kompensation", E, "C", T.compensation],
+  stardelta: ["Stern-Dreieck-Umrechnung", "Stern-Dreieck", E, "Y", T.starDelta],
+  overload: ["Schutzorgan / Absicherung", "Schutzorgan", S, "⚡", T2.overload],
+  loop: ["Schleifenimpedanz & Abschaltbedingung", "Schleifenimpedanz", S, "Zs", T2.loop],
+  ik: ["Kurzschlussstrom", "Kurzschlussstrom", S, "Ik", T2.shortCircuit],
+  selectivity: ["Selektivität (gG-Sicherungen)", "Selektivität", S, "≥", T2.selectivity],
+  feeder: ["UVT-Zuleitung (Gesamtprüfung)", "UVT-Zuleitung", S, "UV", T2.feeder],
+  trafo: ["Trafo- & Einspeiseberechnung", "Transformator", S, "T", T2.transformerView],
+  site: ["Baustromanschluss", "Baustrom", N, "⚒", T2.constructionSite],
+  ev: ["Ladeinfrastruktur (E-Mobilität)", "Ladeinfrastruktur", N, "🔌", T2.evCharging],
+  pvstring: ["PV-Stringauslegung", "PV-Stringauslegung", P, "☀", T.pvString],
+  pvyield: ["PV-Ertrag & Amortisation", "PV-Ertrag", P, "€", T.pvYield],
+  battery: ["Energiespeicher", "Energiespeicher", P, "▮", T.battery],
+  emlight: ["Batterie Sicherheitsbeleuchtung", "Sicherheitsbeleuchtung", S, "⚠", T2.emergencyLight],
+  alarm: ["BMA / EMA Notstrombatterie", "BMA / EMA", S, "🔔", T2.alarmSystem],
+  saa: ["SAA / ELA Leistungsprüfung", "SAA-Leistung", S, "📢", T2.speakerSystem],
+  led: ["LED-Vorwiderstand", "LED-Vorwiderstand", L, "◐", T.led],
+  resistor: ["Widerstands-Farbcode", "Farbcode", L, "▥", resistorView],
+  eseries: ["E-Reihen-Normwerte", "E-Reihen", L, "E", T.eSeriesView],
+  reactance: ["Blindwiderstand & Resonanz", "Blindwiderstand", L, "X", T.reactance],
+  tau: ["RC/RL-Zeitkonstante", "Zeitkonstante", L, "τ", T.timeConstant],
+  ip: ["IP-Schutzarten", "IP-Schutzart", N, "IP", T2.ipCode],
+  tables: ["Tabellen & Praxiswerte (inkl. IK)", "Tabellen", N, "☰", T2.tables],
+};
+const nav = (key) => navRow(key, TOOLS[key][0], TOOLS[key][2], TOOLS[key][3]);
+const GROUPS = [
+  ["Grundlagen", ["ohm", "combine", "divider", "db"]],
+  ["Leitungen & Energietechnik", ["power", "section", "drop", "maxlen", "wire", "comp", "stardelta"]],
+  ["Schutztechnik & Einspeisung", ["overload", "loop", "ik", "selectivity", "feeder", "trafo"]],
+  ["Anschlüsse", ["site", "ev"]],
+  ["Photovoltaik & Speicher", ["pvstring", "pvyield", "battery"]],
+  ["Sicherheitstechnik", ["emlight", "alarm", "saa"]],
+  ["Elektronik", ["led", "resistor", "eseries", "reactance", "tau"]],
+  ["Nachschlagen", ["ip", "tables"]],
+];
+
 function home() {
+  const favs = favorites.list().filter((k) => k in TOOLS);
+  const nSaved = saves.list().length;
   return [
-    ...section("Grundlagen", [
-      navRow("ohm", "Ohmsches Gesetz & Leistung", "#ff9500", "Ω"),
-      navRow("combine", "Reihen- & Parallelschaltung", "#ff9500", "⫴"),
-      navRow("divider", "Spannungsteiler", "#ff9500", "÷"),
-      navRow("db", "Dezibel-Rechner", "#ff9500", "dB"),
-    ]),
-    ...section("Energietechnik", [
-      navRow("power", "Leistung 1~/3~ & Motorstrom", "#34c759", "P"),
-      navRow("drop", "Spannungsfall", "#34c759", "↘"),
-      navRow("section", "Mindestquerschnitt", "#34c759", "⌀"),
-      navRow("wire", "Leitungswiderstand & Temperatur", "#34c759", "ϑ"),
-      navRow("comp", "Blindleistungskompensation", "#34c759", "C"),
-      navRow("stardelta", "Stern-Dreieck-Umrechnung", "#34c759", "Y"),
-    ]),
-    ...section("Photovoltaik & Speicher", [
-      navRow("pvstring", "PV-Stringauslegung", "#ffcc00", "☀"),
-      navRow("pvyield", "PV-Ertrag & Amortisation", "#ffcc00", "€"),
-      navRow("battery", "Energiespeicher", "#ffcc00", "▮"),
-    ]),
-    ...section("Elektronik", [
-      navRow("led", "LED-Vorwiderstand", "#5856d6", "◐"),
-      navRow("resistor", "Widerstands-Farbcode", "#5856d6", "▥"),
-      navRow("eseries", "E-Reihen-Normwerte", "#5856d6", "E"),
-      navRow("reactance", "Blindwiderstand & Resonanz", "#5856d6", "X"),
-      navRow("tau", "RC/RL-Zeitkonstante", "#5856d6", "τ"),
-    ]),
+    ...(favs.length ? section("★ Favoriten", favs.map(nav)) : []),
+    ...section("", [navRow("projects", `Projekte & gespeicherte Berechnungen${nSaved ? ` (${nSaved})` : ""}`, "#8e8e93", "📁")]),
+    ...GROUPS.flatMap(([title, keys]) => section(title, keys.map(nav))),
     ...section("", [navRow("settings", "Einstellungen", "#8e8e93", "⚙")]),
     h("div", { class: "credit" }, "Built by R. U. Sirius?"),
   ];
@@ -198,41 +229,35 @@ function settingsView() {
     ], "Wird für die Farbmarkierung und als Vorgabe beim Mindestquerschnitt verwendet. Welcher Grenzwert gilt, hängt von der Anlage und den anzuwendenden Regeln ab."),
     ...section("Haftungshinweis", [h("div", { class: "row" }, h("span", { class: "hint" }, LEGAL))]),
     ...section("Hinweis zu Leitungsberechnungen", [h("div", { class: "row" }, h("span", { class: "hint" }, DISCLAIMER))]),
-    ...section("", [resultRow("Version", "1.2.1 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
+    ...section("", [resultRow("Version", "1.3.0 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
   ];
 }
 
 // ---------- Routing ----------
-const routes = {
-  "": ["ElektroRechner", home],
-  ohm: ["Ohmsches Gesetz", ohmView],
-  drop: ["Spannungsfall", () => cableView("drop")],
-  section: ["Mindestquerschnitt", () => cableView("section")],
-  resistor: ["Farbcode", resistorView],
-  settings: ["Einstellungen", settingsView],
-  combine: ["Reihe & Parallel", T.combine],
-  divider: ["Spannungsteiler", T.voltageDivider],
-  db: ["Dezibel", T.decibel],
-  power: ["Leistung", T.acPower],
-  wire: ["Leitungswiderstand", T.wireResistance],
-  comp: ["Kompensation", T.compensation],
-  stardelta: ["Stern-Dreieck", T.starDelta],
-  led: ["LED-Vorwiderstand", T.led],
-  eseries: ["E-Reihen", T.eSeriesView],
-  reactance: ["Blindwiderstand", T.reactance],
-  tau: ["Zeitkonstante", T.timeConstant],
-  pvstring: ["PV-Stringauslegung", T.pvString],
-  pvyield: ["PV-Ertrag", T.pvYield],
-  battery: ["Energiespeicher", T.battery],
-};
+const PAGES = { settings: ["Einstellungen", settingsView], projects: ["Projekte", projectsView] };
 function route() {
-  const key = location.hash.slice(1);
-  const [title, render] = routes[key] ?? routes[""];
-  const isHome = !(key in routes) || key === "";
+  const [key, arg] = location.hash.slice(1).split("/");
+  clearCurrentState();
+  let title, nodes, isTool = false;
+  if (key in TOOLS) { title = TOOLS[key][1]; nodes = TOOLS[key][4](); isTool = true; }
+  else if (key in PAGES) { title = PAGES[key][0]; nodes = PAGES[key][1](); }
+  else if (key === "report" && arg) { title = "Projektbericht"; nodes = reportView(decodeURIComponent(arg)); }
+  else { title = "ElektroRechner"; nodes = home(); }
+  const isHome = title === "ElektroRechner";
   titleEl.textContent = title;
   header.classList.toggle("sub", !isHome);
   back.hidden = isHome;
-  view.replaceChildren(...render());
+  favBtn.hidden = !isTool;
+  if (isTool) {
+    const set = () => { favBtn.textContent = favorites.has(key) ? "★" : "☆"; };
+    set();
+    favBtn.onclick = () => { favorites.toggle(key); set(); };
+  }
+  view.replaceChildren(...nodes);
+  setPreset(null); // nicht verbrauchte Voreinstellung verwerfen
+  if (isTool && !["tables"].includes(key)) {
+    view.append(saveBar(key, title, view), h("div", { class: "print-only" }, `ElektroRechner – Built by R. U. Sirius? · ${LEGAL}`));
+  }
   window.scrollTo(0, 0);
 }
 window.addEventListener("hashchange", route);

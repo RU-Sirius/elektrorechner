@@ -46,3 +46,20 @@ button.action { width: 100%; border: 0; background: none; font: inherit; color: 
 .modal-box h2 { margin: 0 0 8px; font-size: 20px; }
 .modal-box p { margin: 0 0 16px; color: var(--text); font-size: 15px; line-height: 1.4; }
 .modal-btn { width: 100%; border: 0; border-radius: 10px; padding: 12px; font: inherit; font-weight: 600; background: var(--accent); color: #fff; }
+#fav { position: absolute; right: 12px; top: calc(env(safe-area-inset-top) + 6px); background: none; border: 0; font-size: 24px; color: var(--accent); padding: 0 4px; }
+.btnrow { display: flex; gap: 8px; padding: 8px 16px; }
+.btn { flex: 1; border: 0; border-radius: 9px; padding: 10px; font: inherit; font-size: 15px; font-weight: 600; background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+.btn.danger { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); flex: 0 0 auto; }
+.report-head { margin: 16px 16px 0; }
+.report-head h2 { margin: 0; font-size: 22px; }
+.report-meta { color: var(--sub); font-size: 13px; }
+.print-only { display: none; }
+@media print {
+  :root { --bg: #fff; --card: #fff; --text: #000; --sub: #444; --sep: #bbb; }
+  header #back, header #fav, .noprint, .modal { display: none !important; }
+  header { position: static; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  header.sub h1 { text-align: left; font-size: 20px; }
+  .group { border: 1px solid #bbb; break-inside: avoid; }
+  .print-only { display: block; color: #444; font-size: 11px; margin: 16px; }
+  input, select { appearance: none; -webkit-appearance: none; }
+}

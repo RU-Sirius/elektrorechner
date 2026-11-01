@@ -292,3 +292,106 @@ export function chargeTime({ capacity, socFrom, socTo, power, eta }) {
   const energy = capacity * (socTo - socFrom);
   return { energy, hours: energy / (power * eta) };
 }
+
+// ===================== Schutztechnik & Installation =====================
+
+// Obere Grenze der unverzögerten (magnetischen) Auslösung von LS-Schaltern als Vielfaches
+// von In nach IEC/EN 60898-1: B 3–5, C 5–10, D 10–20 → für sicheres Auslösen der obere Wert.
+export const MCB_TRIP = { B: 5, C: 10, D: 20 };
+// Übliche Bemessungsströme von Schutzorganen in A.
+export const RATED_CURRENTS = [2, 4, 6, 10, 13, 16, 20, 25, 32, 35, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630];
+export const nextRated = (i) => RATED_CURRENTS.find((r) => r >= i * (1 - 1e-9)) ?? null;
+
+const tempFactor = (alpha, temp) => 1 + (alpha ?? 0) * ((temp ?? 20) - 20);
+
+// Schleifenimpedanz am Leitungsende und Abschaltbedingung (TN-System, L–PE bzw. L–N).
+// Vereinfachung: nur Wirkwiderstand der Leitung (Reaktanz vernachlässigt), Zvor als Betrag addiert.
+export function loopImpedance({ zPre, length, section, kappa, alpha, temp, u0 = 230, c = 0.95, ia }) {
+  pos(length, section, kappa, u0, c, ia);
+  if (zPre === null || zPre < 0) throw new Error("positive");
+  const k = tempFactor(alpha, temp);
+  const rLine = ((2 * length) / (kappa * section)) * k;
+  const zs = zPre + rLine;
+  const ik = (c * u0) / zs;
+  const lMax = (((c * u0) / ia - zPre) * kappa * section) / (2 * k);
+  return { rLine, zs, ik, ok: ik >= ia, zsMax: (c * u0) / ia, lMax: lMax > 0 ? lMax : 0 };
+}
+
+// Maximale Länge nach zulässigem Spannungsfall (Umkehrung von minSection).
+export function maxLengthDrop({ system, current, voltage, maxPercent, cos, kappa, section }) {
+  checkPositive(current, voltage, maxPercent, kappa, section);
+  const c = effCos(system, cos);
+  return ((maxPercent / 100) * voltage * kappa * section) / (SYSTEMS[system].factor * current * c);
+}
+
+// Überlastschutz: Ib ≤ In ≤ Iz und I2 ≤ 1,45·Iz. I2 = k2·In (LS-Schalter 1,45; gG ab 16 A 1,6).
+export function overloadCheck({ ib, inn, iz, k2 }) {
+  pos(ib, inn, iz, k2);
+  const i2 = k2 * inn;
+  return { c1: ib <= inn, c2: inn <= iz, c3: i2 <= 1.45 * iz, i2, i2max: 1.45 * iz };
+}
+
+// Transformator: Bemessungsstrom, Kurzschlussimpedanz, Ik3 an den Klemmen bei starrem Vornetz.
+export function transformer({ sn, un, uk }) {
+  pos(sn, un, uk);
+  const inn = sn / (Math.sqrt(3) * un);
+  return { inn, ik3: (inn * 100) / uk, zk: ((uk / 100) * un * un) / sn };
+}
+
+// Selektivität von gG-Sicherungen: verbreitete Regel Nennstromverhältnis ≥ 1,6 : 1.
+export function fuseSelectivity(up, down) {
+  pos(up, down);
+  return { ratio: up / down, ok: up / down >= 1.6 - 1e-9 };
+}
+
+// Leistungsbilanz mit Gleichzeitigkeitsfaktor g → Strom → nächster Bemessungsstrom.
+export function demand({ loads, g, u, system, cos }) {
+  pos(g, u); cosOk(cos);
+  const sum = loads.reduce((a, l) => a + (l.p ?? 0) * (l.n ?? 0), 0);
+  if (!(sum > 0)) throw new Error("positive");
+  const p = sum * g;
+  const i = p / ((system === "ac3" ? Math.sqrt(3) : 1) * u * cos);
+  return { sum, p, i, rated: nextRated(i) };
+}
+
+// Batteriekapazität in Ah: Last P über Dauer t bei Batteriespannung U, Wirkungsgrad η, Reservefaktor f.
+export function emergencyBattery({ p, hours, u, eta, reserve }) {
+  pos(p, hours, u, eta, reserve);
+  if (eta > 1) throw new Error("range");
+  return { ah: ((p * hours) / (u * eta)) * reserve, wh: ((p * hours) / eta) * reserve };
+}
+// Gefahrenmeldeanlage: C = (I_Ruhe·t_Ruhe + I_Alarm·t_Alarm) · Reservefaktor.
+export function alarmBattery({ iq, tq, ia, ta, reserve }) {
+  pos(iq, tq, ia, ta, reserve);
+  return { ah: (iq * tq + ia * ta) * reserve };
+}
+
+// ELA/SAA: Verstärkerauslastung und Leitungsverlust auf der 100-V-Linie.
+export function speakerLine({ taps, reserve, amp, u = 100, length, section, kappa }) {
+  pos(taps, reserve, amp, u, length, section, kappa);
+  const z = (u * u) / taps;
+  const r = (2 * length) / (kappa * section);
+  const rel = (z / (z + r)) ** 2;
+  return { needed: taps * reserve, ok: taps * reserve <= amp, z, r, lossDb: 20 * Math.log10((z + r) / z), pLoad: taps * rel };
+}
+
+// Schutzarten nach IEC 60529 (IP) und Stoßfestigkeit nach IEC 62262 (IK).
+export const IP_FIRST = {
+  0: "Kein Schutz", 1: "Fremdkörper ≥ 50 mm; Schutz gegen Zugang mit dem Handrücken",
+  2: "Fremdkörper ≥ 12,5 mm; Schutz gegen Zugang mit dem Finger", 3: "Fremdkörper ≥ 2,5 mm; Schutz gegen Zugang mit Werkzeug",
+  4: "Fremdkörper ≥ 1,0 mm; Schutz gegen Zugang mit Draht", 5: "Staubgeschützt; Schutz gegen Zugang mit Draht",
+  6: "Staubdicht; Schutz gegen Zugang mit Draht",
+};
+export const IP_SECOND = {
+  0: "Kein Schutz", 1: "Senkrecht fallende Wassertropfen", 2: "Fallende Tropfen bei bis zu 15° Neigung",
+  3: "Sprühwasser (bis 60° gegen die Senkrechte)", 4: "Spritzwasser aus allen Richtungen", 5: "Strahlwasser",
+  6: "Starkes Strahlwasser", 7: "Zeitweiliges Untertauchen", 8: "Dauerndes Untertauchen",
+  9: "Wasser bei Hochdruck-/Dampfstrahlreinigung",
+};
+// Als Liste, damit die Reihenfolge IK00 … IK10 erhalten bleibt.
+export const IK_ENERGY = [["00", null], ["01", 0.14], ["02", 0.2], ["03", 0.35], ["04", 0.5], ["05", 0.7], ["06", 1], ["07", 2], ["08", 5], ["09", 10], ["10", 20]];
+export function decodeIP(code) {
+  const m = String(code).trim().toUpperCase().replace(/^IP/, "").match(/^([0-6X])([0-9X])([A-D])?([HMSW])?$/);
+  if (!m) throw new Error("range");
+  return { first: m[1] === "X" ? null : IP_FIRST[m[1]], second: m[2] === "X" ? null : IP_SECOND[m[2]], d1: m[1], d2: m[2] };
+}

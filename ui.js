@@ -53,8 +53,17 @@ const ERRORS = {
   cos: "cos φ muss zwischen 0 und 1 liegen.",
   eta: "Wirkungsgrad muss zwischen 0 und 1 liegen.",
 };
+// Gespeicherte Eingaben, die beim nächsten Öffnen eines Rechners übernommen werden.
+let preset = null;
+export const setPreset = (v) => { preset = v; };
+// Zustand des gerade angezeigten Rechners (für „Speichern“).
+export let currentState = null;
+export const clearCurrentState = () => { currentState = null; };
+
 export function calcView({ init, inputs, compute, resultTitle = "Ergebnis", footer, rangeMsg = "Werte außerhalb des gültigen Bereichs." }) {
-  const s = { ...init };
+  const s = { ...init, ...(preset ?? {}) };
+  preset = null;
+  currentState = s;
   const container = h("div");
   const resultBox = h("div");
   const bind = (k) => (e) => { s[k] = e.target.value; renderResult(); };
