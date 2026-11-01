@@ -1,5 +1,5 @@
 import * as C from "./calc.js";
-import { DISCLAIMER, settings, h, section, inputRow, resultRow, msgRow, selectRow, segmented, navRow } from "./ui.js";
+import { LEGAL, DISCLAIMER, settings, h, section, inputRow, resultRow, msgRow, selectRow, segmented, navRow } from "./ui.js";
 import * as T from "./tools.js";
 
 const view = document.getElementById("view");
@@ -38,7 +38,7 @@ function home() {
       navRow("tau", "RC/RL-Zeitkonstante", "#5856d6", "τ"),
     ]),
     ...section("", [navRow("settings", "Einstellungen", "#8e8e93", "⚙")]),
-    h("div", { class: "credit" }, "Built by R. U. Sirius"),
+    h("div", { class: "credit" }, "Built by R. U. Sirius?"),
   ];
 }
 
@@ -196,8 +196,9 @@ function settingsView() {
     ...section("Berechnung", [
       selectRow("Grenzwert Spannungsfall", opts, String(settings.maxPercent), (e) => (settings.maxPercent = Number(e.target.value))),
     ], "Wird für die Farbmarkierung und als Vorgabe beim Mindestquerschnitt verwendet. Welcher Grenzwert gilt, hängt von der Anlage und den anzuwendenden Regeln ab."),
-    ...section("Hinweis", [h("div", { class: "row" }, h("span", { class: "hint" }, DISCLAIMER))]),
-    ...section("", [resultRow("Version", "1.2.0 (Web)"), resultRow("Entwickelt von", "R. U. Sirius")]),
+    ...section("Haftungshinweis", [h("div", { class: "row" }, h("span", { class: "hint" }, LEGAL))]),
+    ...section("Hinweis zu Leitungsberechnungen", [h("div", { class: "row" }, h("span", { class: "hint" }, DISCLAIMER))]),
+    ...section("", [resultRow("Version", "1.2.1 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
   ];
 }
 
@@ -236,6 +237,16 @@ function route() {
 }
 window.addEventListener("hashchange", route);
 route();
+
+// Haftungshinweis beim ersten Start bestätigen lassen.
+if (localStorage.getItem("legalAccepted") !== "1") {
+  const overlay = h("div", { class: "modal", role: "dialog", "aria-modal": "true" },
+    h("div", { class: "modal-box" },
+      h("h2", {}, "Bitte beachten"),
+      h("p", {}, LEGAL),
+      h("button", { class: "modal-btn", onclick: () => { localStorage.setItem("legalAccepted", "1"); overlay.remove(); } }, "Verstanden")));
+  document.body.append(overlay);
+}
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then((reg) => {
   // Bei jedem Zurückkehren in die App nach Updates schauen.

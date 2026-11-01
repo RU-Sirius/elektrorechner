@@ -41,3 +41,8 @@ button.action { width: 100%; border: 0; background: none; font: inherit; color: 
 .resistor { display: block; width: 100%; height: 80px; margin: 8px 0; }
 .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--sep); vertical-align: -2px; }
 .credit { text-align: center; color: var(--sub); font-size: 13px; margin: 28px 0 8px; letter-spacing: .02em; }
+.modal { position: fixed; inset: 0; z-index: 10; background: rgba(0,0,0,.45); display: grid; place-items: center; padding: 24px; }
+.modal-box { background: var(--card); border-radius: 14px; padding: 20px; max-width: 420px; }
+.modal-box h2 { margin: 0 0 8px; font-size: 20px; }
+.modal-box p { margin: 0 0 16px; color: var(--text); font-size: 15px; line-height: 1.4; }
+.modal-btn { width: 100%; border: 0; border-radius: 10px; padding: 12px; font: inherit; font-weight: 600; background: var(--accent); color: #fff; }

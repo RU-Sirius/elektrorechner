@@ -1,5 +1,9 @@
 import * as C from "./calc.js";
 
+export const LEGAL = "Kostenloses Hilfsmittel ohne Gewähr. Alle Ergebnisse beruhen auf vereinfachten Formeln und dienen nur der Orientierung. " +
+  "Sie ersetzen keine Planung, Bemessung und Prüfung nach den geltenden Normen und Vorschriften durch eine Elektrofachkraft. " +
+  "Arbeiten an elektrischen Anlagen gehören in die Hände von Elektrofachkräften. Die Nutzung erfolgt auf eigene Verantwortung.";
+
 export const DISCLAIMER = "Vereinfachte Berechnung ohne Leitungsreaktanz und ohne Temperaturkorrektur. " +
   "Strombelastbarkeit, Verlegeart, Häufung, Kurzschluss- und Abschaltbedingungen werden nicht geprüft. " +
   "Das Ergebnis ersetzt keine normgerechte Bemessung durch eine Elektrofachkraft.";
