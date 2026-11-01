@@ -88,3 +88,28 @@ assert.equal(c.decodeIP("ipx7").first, null); assert.throws(() => c.decodeIP("IP
 console.log("Schutztechnik-Tests bestanden.");
 assert.deepEqual(c.IK_ENERGY.map(([k]) => k), ["00","01","02","03","04","05","06","07","08","09","10"]);
 console.log("IK-Reihenfolge ok.");
+
+// ---------- Netzwerk (Referenz: Python ipaddress) ----------
+const N = await import("./net.js");
+r = N.ipv4Info("192.168.10.77/26");
+assert.equal(r.network, "192.168.10.64"); assert.equal(r.broadcast, "192.168.10.127"); assert.equal(r.mask, "255.255.255.192");
+assert.equal(r.wildcard, "0.0.0.63"); assert.equal(r.first, "192.168.10.65"); assert.equal(r.last, "192.168.10.126"); assert.equal(r.hosts, 62);
+assert.equal(N.ipv4Info("10.1.2.3", "255.255.0.0").prefix, 16);
+assert.equal(N.ipv4Type(N.parseIPv4("172.20.1.1")), "Privat (RFC 1918)"); assert.equal(N.ipv4Type(N.parseIPv4("8.8.8.8")), "Öffentlich");
+assert.equal(N.ipv4Info("10.0.0.0/31").hosts, 2); assert.equal(N.ipv4Info("10.0.0.5/32").hosts, 1);
+assert.throws(() => N.ipv4Info("256.1.1.1/24")); assert.throws(() => N.ipv4Info("10.0.0.1", "255.0.255.0"));
+r = N.ipv4Subnets("10.0.0.0/24", { count: 5 }); assert.equal(r.count, 8); assert.equal(r.list[0].cidr, "10.0.0.0/27");
+assert.equal(r.list[1].cidr, "10.0.0.32/27"); assert.equal(r.list[7].cidr, "10.0.0.224/27");
+assert.equal(N.ipv4Subnets("10.0.0.0/24", { hosts: 30 }).newPrefix, 27);
+r = N.ipv6Info("2001:db8:abcd:12::1/48");
+assert.equal(r.expanded, "2001:0db8:abcd:0012:0000:0000:0000:0001"); assert.equal(r.compressed, "2001:db8:abcd:12::1");
+assert.equal(r.network, "2001:db8:abcd::/48"); assert.equal(r.subnets64, 65536n); assert.equal(r.type, "Global Unicast");
+assert.equal(N.ipv6Compressed(N.parseIPv6("2001:0db8:0000:0000:0000:ff00:0042:8329")), "2001:db8::ff00:42:8329");
+assert.equal(N.ipv6Expanded(N.parseIPv6("::1")), "0000:0000:0000:0000:0000:0000:0000:0001");
+assert.equal(N.ipv6Compressed(N.parseIPv6("fe80::")), "fe80::"); assert.equal(N.ipv6Info("fe80::1/64").type, "Link-Local");
+assert.equal(N.ipv6Compressed(N.parseIPv6("2001:db8:0:1:1:1:1:1")), "2001:db8:0:1:1:1:1:1");
+assert.throws(() => N.parseIPv6("2001::db8::1"));
+near(N.transferTime({ bytes: 50e9, rate: 100e6, efficiency: 0.9 }), 4444.444444444444, 1e-6);
+r = N.poeBudget({ devices: [{ type: "at", count: 8 }, { type: "af", count: 4 }], budget: 370 }); near(r.sum, 301.6, 1e-9); assert.ok(r.ok);
+r = N.fiberBudget({ tx: -3, rx: -28, length: 2, att: 0.35, nConn: 2, lossConn: 0.75, nSplice: 4, lossSplice: 0.1, margin: 3 }); near(r.loss, 5.6, 1e-9); near(r.reserve, 19.4, 1e-9);
+console.log("Netzwerk-Tests bestanden.");

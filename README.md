@@ -5,7 +5,7 @@ Kein Build-Schritt, keine Abhängigkeiten, keine Datenübertragung: Gespeicherte
 
 **App öffnen:** https://ru-sirius.github.io/elektrorechner/ – auf dem iPhone in Safari über *Teilen → Zum Home-Bildschirm* installieren.
 
-## Funktionen (v1.3.0)
+## Funktionen (v1.4.0)
 
 **Grundlagen**
 - Ohmsches Gesetz & Leistung (zwei beliebige von U, I, R, P)
@@ -48,6 +48,15 @@ Kein Build-Schritt, keine Abhängigkeiten, keine Datenübertragung: Gespeicherte
 - LED-Vorwiderstand, Widerstands-Farbcode, E-Reihen (E6/E12/E24)
 - Blindwiderstand & Resonanz, RC/RL-Zeitkonstante
 
+**Netzwerktechnik**
+- IPv4-Subnetzrechner (Netz, Maske, Broadcast, Host-Bereich, Adresstyp)
+- IPv4-Subnetting (nach Anzahl Netze oder Hosts pro Netz)
+- IPv6-Adressen & Präfixe (Kurzform nach RFC 5952, Anzahl /64-Netze)
+- Datenübertragung & Bandbreite
+- PoE-Leistungsbudget (IEEE 802.3af/at/bt)
+- LWL-Dämpfungsbudget
+- Netzwerk-Tabellen (Kabelkategorien, Ethernet-Längen, PoE, private Bereiche, Präfixe)
+
 **Nachschlagen**
 - IP-Schutzarten (IEC 60529), IK-Stoßfestigkeit (IEC 62262)
 - Tabellen & Praxiswerte (LS-Auslösebereiche, I₂, Abschaltzeiten, Nennquerschnitte, Bemessungsströme, κ/α, Normreihen)
@@ -55,8 +64,8 @@ Kein Build-Schritt, keine Abhängigkeiten, keine Datenübertragung: Gespeicherte
 **Arbeiten mit der App**
 - Favoriten (☆ oben rechts in jedem Rechner)
 - Projekte: Berechnungen speichern, wieder öffnen, löschen
-- PDF-Ausgabe jeder Berechnung über den Druckdialog
-- Projektberichte mit allen Berechnungen eines Projekts
+- PDF-Ausgabe jeder Berechnung: wird in der App erzeugt und auf iPhone/iPad über das Teilen-Menü ausgegeben, am Computer heruntergeladen
+- Projektberichte mit allen Berechnungen eines Projekts (PDF)
 - Eingabe mit SI-Präfix (4,7k · 100n · 2,2µ · 10m), Offline-Betrieb, automatische Updates
 
 ## Bewusst nicht enthalten
@@ -66,7 +75,8 @@ geltenden Normen bzw. Herstellerunterlagen eingegeben.
 
 ## Entwicklung
 - `calc.js`: Rechenlogik · Tests: `node test.mjs`
-- `ui.js`: gemeinsame Bausteine · `tools.js`, `tools2.js`: Rechner · `projects.js`: Favoriten, Projekte, Berichte
+- `ui.js`: gemeinsame Bausteine · `tools.js`, `tools2.js`, `tools3.js`: Rechner · `net.js`: Netzwerk-Logik
+- `projects.js`: Favoriten, Projekte, Berichte · `pdf.js`: PDF-Erzeugung ohne externe Bibliothek
 - `app.js`, `index.html`, `style.css`: Startseite, Routing, Darstellung
 - `sw.js`: Offline-Cache. **Nach Änderungen `CACHE`-Version erhöhen.**
 

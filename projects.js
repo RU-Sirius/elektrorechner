@@ -1,6 +1,7 @@
 // Favoriten, gespeicherte Berechnungen (Projekte), PDF-Ausgabe und Projektberichte.
 // Alles bleibt lokal im Browser (localStorage); nichts wird übertragen.
 import { h, section, resultRow, msgRow, currentState, setPreset, LEGAL } from "./ui.js";
+import { sharePdf, safeFilename } from "./pdf.js";
 
 const KEY_FAV = "favorites", KEY_SAVES = "savedCalcs";
 const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
@@ -66,8 +67,13 @@ export function saveBar(routeKey, title, root) {
                     date: new Date().toISOString(), state: currentState ? { ...currentState } : null, data: snapshot(root) });
         alert(`Gespeichert in „${project.trim()}“.`);
       } }, "In Projekt speichern"),
-      h("button", { class: "btn", onclick: () => window.print() }, "Als PDF / Drucken"),
-    )], "„Als PDF“: Im Druckdialog „Als PDF sichern“ bzw. auf dem iPhone Teilen → Drucken → mit zwei Fingern aufziehen."));
+      h("button", { class: "btn", onclick: () => {
+        const date = fmtDate(new Date().toISOString());
+        sharePdf(`${safeFilename(title)}.pdf`, { title, subtitle: `ElektroRechner · ${date}`,
+          blocks: snapshot(root).map((g) => ({ heading: g.title, rows: g.rows })), footer: `Built by R. U. Sirius? · ${LEGAL}` });
+      } }, "PDF teilen / sichern"),
+    ), h("div", { class: "btnrow" }, h("button", { class: "btn", style: "flex:1;opacity:.8", onclick: () => window.print() }, "Drucken"))],
+    "„PDF teilen / sichern“ öffnet auf dem iPhone das Teilen-Menü (z. B. „In Dateien sichern“, Mail, Drucken). Am Computer wird die Datei heruntergeladen."));
 }
 
 export function projectsView() {
@@ -92,7 +98,13 @@ export function reportView(project) {
   return [
     h("div", { class: "report-head" }, h("h2", {}, project),
       h("div", { class: "report-meta" }, `Projektbericht · ${entries.length} Berechnung(en) · erstellt ${fmtDate(new Date().toISOString())}`)),
-    h("div", { class: "noprint" }, ...section("", [h("div", { class: "btnrow" }, h("button", { class: "btn", onclick: () => window.print() }, "Als PDF / Drucken"))])),
+    h("div", { class: "noprint" }, ...section("", [h("div", { class: "btnrow" },
+      h("button", { class: "btn", onclick: () => sharePdf(`Projektbericht_${safeFilename(project)}.pdf`, {
+        title: `Projektbericht: ${project}`,
+        subtitle: `ElektroRechner · ${entries.length} Berechnung(en) · erstellt ${fmtDate(new Date().toISOString())}`,
+        blocks: entries.flatMap((e) => [{ big: e.name, text: `${e.title} · ${fmtDate(e.date)}` }, ...e.data.map((g) => ({ heading: g.title, rows: g.rows }))]),
+        footer: `Built by R. U. Sirius? · ${LEGAL}` }) }, "Bericht als PDF"),
+      h("button", { class: "btn", style: "opacity:.8", onclick: () => window.print() }, "Drucken"))])),
     ...entries.flatMap((e) => [
       h("div", { class: "report-head" }, h("h2", { style: "font-size:18px" }, e.name), h("div", { class: "report-meta" }, `${e.title} · ${fmtDate(e.date)}`)),
       ...e.data.flatMap((g) => section(g.title, g.rows.map(([a, b]) => resultRow(a, b)))),
