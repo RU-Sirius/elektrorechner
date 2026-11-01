@@ -35,7 +35,7 @@ Deinstallieren: in der App ⋮ → „ElektroRechner deinstallieren“ oder übe
 
 Die Anleitung steht auch in der App unter **„App installieren“**.
 
-## Funktionen (v1.8.0)
+## Funktionen (v1.9.0)
 
 **Grundlagen**
 - Ohmsches Gesetz & Leistung (zwei beliebige von U, I, R, P)
@@ -60,9 +60,6 @@ Die Anleitung steht auch in der App unter **„App installieren“**.
 - Selektivität von gG-Sicherungen (Nennstromverhältnis ≥ 1,6 : 1)
 - UVT-Zuleitung: Gesamtprüfung Überlast, Spannungsfall, Abschaltung
 - Trafo- & Einspeiseberechnung (In, Ik3, Zk, Auslastung)
-- **Prüf- und Messprotokoll:** beliebig viele Protokolle je Anlage, Verteiler mit Stromkreisen (Schutzorgan z. B. B16, Leitung, RCD), Messwerte Zs, R_iso (auch „>500“), R_PE, RCD-Auslösezeit und -strom;
-  Grenzwerte legt der Prüfer selbst fest (keine Normwerte hinterlegt), Bewertung i. O./n. i. O. je Stromkreis mit Zs,max und Ik, Besichtigen/Erproben, Mängel, Gesamturteil, nächster Prüftermin;
-  PDF im A4-Querformat mit Messwerttabelle je Verteiler und Unterschriftsfeldern; „Als Wiederholungsprüfung kopieren“ übernimmt die Struktur ohne Messwerte
 
 **Anschlüsse & Beleuchtung**
 - Baustromanschluss (Leistungsbilanz mit Gleichzeitigkeit → Bemessungsstrom)
@@ -108,6 +105,18 @@ Die Anleitung steht auch in der App unter **„App installieren“**.
 - LWL-Dämpfungsbudget
 - Netzwerk-Tabellen (Kabelkategorien mit max. Ethernet-Datenrate, Ethernet-Längen, PoE, private Bereiche, Präfixe)
 
+**Planung & Dokumentation**
+- **Prüf- und Messprotokoll:** beliebig viele Protokolle je Anlage, Verteiler mit Stromkreisen (Schutzorgan z. B. B16, Leitung, RCD), Messwerte Zs, R_iso (auch „>500“), R_PE, RCD-Auslösezeit und -strom;
+  Grenzwerte legt der Prüfer selbst fest (keine Normwerte hinterlegt), Bewertung i. O./n. i. O. je Stromkreis mit Zs,max und Ik, Besichtigen/Erproben, Mängel, Gesamturteil, nächster Prüftermin;
+  PDF im A4-Querformat mit Messwerttabelle je Verteiler und Unterschriftsfeldern; „Als Wiederholungsprüfung kopieren“ übernimmt die Struktur ohne Messwerte
+- **Kalkulation & Aufmaß:** eigener Leistungskatalog (Materialpreis und Zeitansatz je Einheit – keine Herstellerpreise hinterlegt), Angebote bzw. Aufmaße mit Räumen/Verteilern und Positionen;
+  Stundensatz, Materialzuschlag, Rabatt und MwSt. frei einstellbar, Einheits- und Gesamtpreise, Lohnstunden, Zwischensummen; PDF (wahlweise nur Mengen) und CSV
+- **KNX-Planung:** dreistufige Gruppenadressen (0–31 / 0–7 / 0–255) mit Name, DPT und Bemerkung, Linien mit Teilnehmern (physikalische Adresse 0–15.0–15.0–255),
+  Prüfung auf doppelte und ungültige Adressen, nächste freie Adresse automatisch, Busstrombilanz je Linie gegen den eingetragenen Nennstrom der Spannungsversorgung;
+  PDF und CSV (generisches Format, nicht das ETS-Importformat)
+- **Kabel- & Klemmenbuch:** Leitungen mit Kennzeichnung (automatisch W1, W2 …), Typ, Länge, Anfang/Ende mit Klemmstelle, Stromkreis; Filter, Prüfung auf doppelte Kennzeichnung,
+  Materialliste je Leitungstyp mit Verschnittzuschlag; Kabelliste und Beschriftungsliste als PDF und CSV
+
 **Nachschlagen**
 - IP-Schutzarten (IEC 60529), IK-Stoßfestigkeit (IEC 62262)
 - Tabellen & Praxiswerte (LS-Auslösebereiche, I₂, Abschaltzeiten, Nennquerschnitte, Bemessungsströme, κ/α, Normreihen)
@@ -130,7 +139,7 @@ geltenden Normen bzw. Herstellerunterlagen eingegeben.
 
 ## Entwicklung
 - `calc.js`: Rechenlogik · Tests: `node test.mjs`
-- `ui.js`: gemeinsame Bausteine · `tools.js`, `tools2.js`, `tools3.js`, `tools4.js`: Rechner · `calc4.js`: Logik Beleuchtung/Motor/Messwerte · `protocol.js`: Prüfprotokoll · `pdf.js`: PDF inkl. Tabellen/Querformat · `extras.js`: Suche, Zuletzt verwendet, Datensicherung (in allen drei Apps gleich) · `net.js`: Netzwerk-Logik
+- `ui.js`: gemeinsame Bausteine · `tools.js`, `tools2.js`, `tools3.js`, `tools4.js`: Rechner · `calc4.js`: Logik Beleuchtung/Motor/Messwerte · `protocol.js`: Prüfprotokoll · `kalk.js`, `knx.js`, `cables.js`: Kalkulation, KNX-Planung, Kabelbuch · `docui.js`: gemeinsame Bausteine dafür · `pdf.js`: PDF inkl. Tabellen/Querformat · `extras.js`: Suche, Zuletzt verwendet, Datensicherung (in allen drei Apps gleich) · `net.js`: Netzwerk-Logik
 - `projects.js`: Favoriten, Projekte, Berichte · `pdf.js`: PDF-Erzeugung ohne externe Bibliothek
 - `auto.js`: Logik Regelungs-/Steuerungstechnik · `autotools.js`: Ansichten · `chart.js`: SVG-Diagramme
 - `speedtest.js` + `speedtest/`: Speedtest mit Zufallsdaten-Testdateien (werden vom Service Worker bewusst nicht gecacht)

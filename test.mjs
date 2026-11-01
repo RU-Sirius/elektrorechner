@@ -173,3 +173,20 @@ console.log("Automatisierungs-Tests bestanden.");
   assert.equal(C4.checkCircuit({ device: "B16", zs: null, riso: null, trcd: null, ircd: null }, lim).status, null);
   console.log("Beleuchtung/Motor/Messwerte ok.");
 }
+// ---------- Kalkulation, KNX, Kabelbuch ----------
+{
+  const K = await import("./kalk.js"), X = await import("./knx.js"), W = await import("./cables.js");
+  const p = { wage: "60", matSurcharge: "10", discount: "5", vat: "19", rooms: [{ items: [{ qty: "10", mat: "2", time: "15" }, { qty: "20", mat: "1,5", time: "3" }] }, { items: [{ qty: "1", mat: "100", time: "60" }] }] };
+  let x = K.position(p.rooms[0].items[0], p); near(x.epMat, 2.2); near(x.epLab, 15); near(x.gp, 172); near(x.hours, 2.5);
+  const t = K.totals(p); near(t.rooms[0], 172 + 20 * (1.65 + 3)); near(t.rooms[1], 110 + 60); near(t.net, t.rooms[0] + t.rooms[1]); near(t.discount, t.net * 0.05); near(t.gross, t.net * 0.95 * 1.19); near(t.hours, 2.5 + 1 + 1);
+  const l = { area: "1", line: "1", devices: [{ nr: "1", current: "10" }, { nr: "2", current: "7,5" }, { nr: "3", current: "" }], supply: "160", maxDevices: "2" };
+  let b = X.busBalance(l); near(b.sum, 17.5); near(b.reserve, 142.5); assert.equal(b.missing, 1); assert.equal(b.countOk, false); assert.equal(b.currentOk, true);
+  assert.equal(X.paValid({ area: "15", line: "15" }, { nr: "255" }), true); assert.equal(X.paValid({ area: "16", line: "1" }, { nr: "1" }), false);
+  assert.equal(X.gaValid({ main: "31" }, { mid: "7" }, { sub: "255" }), true); assert.equal(X.gaValid({ main: "32" }, { mid: "0" }, { sub: "1" }), false); assert.equal(X.gaValid({ main: "1" }, { mid: "8" }, { sub: "1" }), false);
+  const pr = { lines: [{ area: "1", line: "1", devices: [{ nr: "1" }, { nr: "1" }] }], ga: [{ main: "0", middles: [{ mid: "0", groups: [{ sub: "1" }, { sub: "2" }, { sub: "2" }] }] }] };
+  const d = X.duplicates(pr); assert.equal(d.pa.get("1.1.1"), 2); assert.equal(d.ga.get("0/0/2"), 2); assert.equal(X.gaRows(pr)[0][0], "0/0/1");
+  const bk = { prefix: "W", waste: "10", cables: [{ label: "W1", type: "NYM-J 3×1,5", length: "12" }, { label: "W9", type: "NYM-J 3×1,5", length: "8" }, { label: "W9", type: "NYM-J 5×2,5", length: "20" }] };
+  assert.equal(W.nextLabel(bk), "W10"); const m = W.materials(bk); near(m[0].len, 20); near(m[0].withWaste, 22); assert.equal(m[0].n, 2); assert.deepEqual(W.duplicateLabels(bk), ["W9"]);
+  assert.ok(W.cableCsv(bk).startsWith("Kennzeichnung;")); assert.equal(W.labelCsv(bk).split("\r\n").length, 7);
+  console.log("Kalkulation/KNX/Kabelbuch ok.");
+}

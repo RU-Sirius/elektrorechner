@@ -5,6 +5,9 @@ import * as T2 from "./tools2.js";
 import * as T3 from "./tools3.js";
 import * as T4 from "./tools4.js";
 import * as PR from "./protocol.js";
+import { kalkView } from "./kalk.js";
+import { knxView } from "./knx.js";
+import { cableView as cableBookView } from "./cables.js";
 import { installView } from "./install.js";
 import * as AT from "./autotools.js";
 import { speedtestView } from "./speedtest.js";
@@ -37,7 +40,10 @@ const TOOLS = {
   stardelta: ["Stern-Dreieck-Umrechnung", "Stern-Dreieck", E, "Y", T.starDelta],
   motor: ["Motoranlauf & Motorschutz", "Motoranlauf", E, "M", T4.motorStart],
   lighting: ["Beleuchtung (Wirkungsgradverfahren)", "Beleuchtung", N, "💡", T4.lighting],
-  protocol: ["Prüf- & Messprotokoll (Verteiler, Stromkreise, PDF)", "Prüfprotokoll", S, "📋", PR.protocolView],
+  protocol: ["Prüf- & Messprotokoll (Verteiler, Stromkreise, PDF)", "Prüfprotokoll", "#5e5ce6", "📋", PR.protocolView],
+  kalk: ["Kalkulation & Aufmaß (eigene Preise, PDF)", "Kalkulation", "#5e5ce6", "€", kalkView],
+  knx: ["KNX-Planung (Gruppenadressen, Linien, Busstrom)", "KNX-Planung", "#5e5ce6", "KNX", knxView],
+  cables: ["Kabel- & Klemmenbuch (Beschriftung, Material)", "Kabelbuch", "#5e5ce6", "W1", cableBookView],
   overload: ["Schutzorgan / Absicherung", "Schutzorgan", S, "⚡", T2.overload],
   loop: ["Schleifenimpedanz & Abschaltbedingung", "Schleifenimpedanz", S, "Zs", T2.loop],
   ik: ["Kurzschlussstrom", "Kurzschlussstrom", S, "Ik", T2.shortCircuit],
@@ -83,7 +89,7 @@ const nav = (key) => navRow(key, TOOLS[key][0], TOOLS[key][2], TOOLS[key][3]);
 const GROUPS = [
   ["Grundlagen", ["ohm", "combine", "divider", "db"]],
   ["Leitungen & Energietechnik", ["power", "section", "drop", "maxlen", "wire", "comp", "stardelta", "motor"]],
-  ["Schutztechnik & Einspeisung", ["overload", "loop", "ik", "selectivity", "feeder", "trafo", "protocol"]],
+  ["Schutztechnik & Einspeisung", ["overload", "loop", "ik", "selectivity", "feeder", "trafo"]],
   ["Anschlüsse & Beleuchtung", ["site", "ev", "lighting"]],
   ["Photovoltaik & Speicher", ["pvstring", "pvyield", "battery"]],
   ["Sicherheitstechnik", ["emlight", "alarm", "saa"]],
@@ -91,6 +97,7 @@ const GROUPS = [
   ["Automatisierung: Regelungstechnik", ["loopsim", "bode", "zn", "pt2", "pidforms"]],
   ["Automatisierung: Steuerungstechnik", ["analog", "numbers", "logic", "encoder", "vfd", "rtd"]],
   ["Netzwerktechnik", ["speed", "ipv4", "subnetting", "ipv6", "transfer", "poe", "fiber", "nettables"]],
+  ["Planung & Dokumentation", ["protocol", "kalk", "knx", "cables"]],
   ["Nachschlagen", ["ip", "tables"]],
 ];
 
@@ -115,7 +122,8 @@ const SEARCH_EXTRA = { ohm: "spannung strom widerstand leistung", section: "quer
   loopsim: "regler pid regelung", bode: "regelung stabilitaet", zn: "regler pid einstellen", analog: "4 20 ma sps s7 skalieren", numbers: "hex binaer bcd gray float ieee",
   logic: "kv diagramm boolesche wahrheitstabelle", vfd: "fu umrichter motor drehzahl", rtd: "temperatur fuehler pt100", speed: "internet geschwindigkeit",
   ipv4: "subnetz maske netzwerk cidr", subnetting: "subnetz aufteilen", poe: "power over ethernet", fiber: "glasfaser lwl", nettables: "kabel cat ethernet", ip: "schutzart", tables: "werte tabelle",
-  motor: "anlauf stern dreieck sanftanlauf motorschutz anlaufstrom", lighting: "licht lux leuchten lichtplanung", protocol: "pruefung messung messprotokoll pruefprotokoll vde 0100 600 isolation rcd fi schleifenimpedanz verteiler stromkreis e check" };
+  motor: "anlauf stern dreieck sanftanlauf motorschutz anlaufstrom", lighting: "licht lux leuchten lichtplanung", kalk: "angebot aufmass kalkulation preis rechnung material stunden lv leistungsverzeichnis", knx: "knx eib gruppenadresse physikalische adresse ets linie busstrom smart home",
+  cables: "kabelbuch klemmenbuch klemmplan beschriftung kabelliste leitungsliste wokabelheft", protocol: "pruefung messung messprotokoll pruefprotokoll vde 0100 600 isolation rcd fi schleifenimpedanz verteiler stromkreis e check" };
 
 function ohmView() {
   const s = { u: "", i: "", r: "", p: "" };
@@ -275,7 +283,7 @@ function settingsView() {
     ...section("Haftungshinweis", [h("div", { class: "row" }, h("span", { class: "hint" }, LEGAL))]),
     ...section("Hinweis zu Leitungsberechnungen", [h("div", { class: "row" }, h("span", { class: "hint" }, DISCLAIMER))]),
     ...X.appsSection(),
-    ...section("", [resultRow("Version", "1.8.0 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
+    ...section("", [resultRow("Version", "1.9.0 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
   ];
 }
 
@@ -302,7 +310,7 @@ function route() {
   }
   view.replaceChildren(...nodes);
   setPreset(null); // nicht verbrauchte Voreinstellung verwerfen
-  if (isTool && !["tables", "nettables", "protocol"].includes(key)) {
+  if (isTool && !["tables", "nettables", "protocol", "kalk", "knx", "cables"].includes(key)) {
     view.append(saveBar(key, title, view), h("div", { class: "print-only" }, `ElektroRechner – Built by R. U. Sirius? · ${LEGAL}`));
   }
   window.scrollTo(0, 0);
