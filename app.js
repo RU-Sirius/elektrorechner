@@ -25,6 +25,11 @@ function home() {
       navRow("comp", "Blindleistungskompensation", "#34c759", "C"),
       navRow("stardelta", "Stern-Dreieck-Umrechnung", "#34c759", "Y"),
     ]),
+    ...section("Photovoltaik & Speicher", [
+      navRow("pvstring", "PV-Stringauslegung", "#ffcc00", "☀"),
+      navRow("pvyield", "PV-Ertrag & Amortisation", "#ffcc00", "€"),
+      navRow("battery", "Energiespeicher", "#ffcc00", "▮"),
+    ]),
     ...section("Elektronik", [
       navRow("led", "LED-Vorwiderstand", "#5856d6", "◐"),
       navRow("resistor", "Widerstands-Farbcode", "#5856d6", "▥"),
@@ -33,6 +38,7 @@ function home() {
       navRow("tau", "RC/RL-Zeitkonstante", "#5856d6", "τ"),
     ]),
     ...section("", [navRow("settings", "Einstellungen", "#8e8e93", "⚙")]),
+    h("div", { class: "credit" }, "Built by R. U. Sirius"),
   ];
 }
 
@@ -191,7 +197,7 @@ function settingsView() {
       selectRow("Grenzwert Spannungsfall", opts, String(settings.maxPercent), (e) => (settings.maxPercent = Number(e.target.value))),
     ], "Wird für die Farbmarkierung und als Vorgabe beim Mindestquerschnitt verwendet. Welcher Grenzwert gilt, hängt von der Anlage und den anzuwendenden Regeln ab."),
     ...section("Hinweis", [h("div", { class: "row" }, h("span", { class: "hint" }, DISCLAIMER))]),
-    ...section("", [resultRow("Version", "1.1.1 (Web)")]),
+    ...section("", [resultRow("Version", "1.2.0 (Web)"), resultRow("Entwickelt von", "R. U. Sirius")]),
   ];
 }
 
@@ -214,6 +220,9 @@ const routes = {
   eseries: ["E-Reihen", T.eSeriesView],
   reactance: ["Blindwiderstand", T.reactance],
   tau: ["Zeitkonstante", T.timeConstant],
+  pvstring: ["PV-Stringauslegung", T.pvString],
+  pvyield: ["PV-Ertrag", T.pvYield],
+  battery: ["Energiespeicher", T.battery],
 };
 function route() {
   const key = location.hash.slice(1);

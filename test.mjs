@@ -57,3 +57,15 @@ r = c.deltaToStar(10, 30, 20); near(r.r1, 3.3333333333333335); near(r.r2, 5); ne
 r = c.starToDelta(r.r1, r.r2, r.r3); near(r.r12, 10); near(r.r23, 30); near(r.r31, 20);
 near(c.db.fromVoltageRatio(10), 20); near(c.db.fromPowerRatio(2), 3.010299956639812); near(c.db.toVoltageRatio(20), 10);
 console.log("Erweiterungstests bestanden.");
+
+// ---------- Photovoltaik & Speicher ----------
+r = c.pvString({ voc: 49.5, vmpp: 41.6, isc: 13.9, pmod: 500, beta: -0.25, tMin: -10, tMax: 70, uMax: 1000, mppMin: 160, mppMax: 850, iMax: 32 });
+near(r.vocCold, 53.83125); near(r.vmppHot, 36.92); near(r.vmppCold, 45.24, 1e-9);
+assert.equal(r.nMaxVoltage, 18); assert.equal(r.nMinMpp, 5); assert.equal(r.nMaxMpp, 18); assert.equal(r.parallel, 2); assert.ok(r.ok);
+r = c.pvYield({ kwp: 10, specYield: 950, selfShare: 30, price: 0.35, feedIn: 0.08, invest: 15000, opex: 150 });
+near(r.e, 9500); near(r.self, 2850); near(r.grid, 6650); near(r.savings, 1379.5, 1e-9); near(r.payback, 10.873504893077202);
+r = c.batteryRuntime({ capacity: 10, dod: 0.9, eta: 0.95, load: 0.5 }); near(r.usable, 9); near(r.hours, 17.1, 1e-9);
+r = c.batterySize({ load: 0.5, hours: 8, dod: 0.9, eta: 0.95, voltage: 48 }); near(r.kwh, 4.678362573099415); near(r.ah, 97.46588693957115);
+r = c.chargeTime({ capacity: 10, socFrom: 0.2, socTo: 0.8, power: 3, eta: 0.95 }); near(r.hours, 2.1052631578947376);
+assert.throws(() => c.chargeTime({ capacity: 10, socFrom: 0.8, socTo: 0.2, power: 3, eta: 0.95 }));
+console.log("PV-/Speichertests bestanden.");

@@ -236,3 +236,59 @@ export const db = {
   toVoltageRatio: (d) => 10 ** (d / 20),
   toPowerRatio: (d) => 10 ** (d / 10),
 };
+
+// ===================== Photovoltaik & Speicher =====================
+
+// Lineare Temperaturkorrektur einer Modulspannung; beta in %/K (meist negativ), Bezug 25 °C (STC).
+const tempCorr = (v, beta, t) => v * (1 + (beta / 100) * (t - 25));
+
+// Stringauslegung. ANNAHME: Der Temperaturkoeffizient von Voc wird auch für Vmpp verwendet,
+// falls kein eigener Wert angegeben ist. Isc-Temperaturanstieg wird vernachlässigt.
+export function pvString({ voc, vmpp, isc, pmod, beta, betaMpp = null, tMin, tMax, uMax, mppMin, mppMax, iMax }) {
+  pos(voc, vmpp, isc, pmod, uMax, mppMin, mppMax, iMax);
+  if (beta === null || tMin === null || tMax === null) throw new Error("positive");
+  if (mppMin >= mppMax || vmpp >= voc) throw new Error("range");
+  const bm = betaMpp ?? beta;
+  const vocCold = tempCorr(voc, beta, tMin);
+  const vmppHot = tempCorr(vmpp, bm, tMax);
+  const vmppCold = tempCorr(vmpp, bm, tMin);
+  const nMaxVoltage = Math.floor(uMax / vocCold);
+  const nMinMpp = Math.ceil(mppMin / vmppHot);
+  const nMaxMpp = Math.floor(mppMax / vmppCold);
+  const nMax = Math.min(nMaxVoltage, nMaxMpp);
+  return { vocCold, vmppHot, vmppCold, nMaxVoltage, nMinMpp, nMaxMpp, nMin: nMinMpp, nMax,
+           ok: nMinMpp <= nMax, parallel: Math.floor(iMax / isc), pString: (n) => n * pmod };
+}
+
+// Jahresertrag und einfache (statische) Amortisation, ohne Degradation, Preissteigerung oder Zinsen.
+export function pvYield({ kwp, specYield, selfShare, price, feedIn, invest, opex = 0 }) {
+  pos(kwp, specYield);
+  if (selfShare === null || selfShare < 0 || selfShare > 100) throw new Error("range");
+  const e = kwp * specYield;
+  const self = (e * selfShare) / 100;
+  const grid = e - self;
+  const savings = self * (price ?? 0) + grid * (feedIn ?? 0) - (opex ?? 0);
+  return { e, self, grid, savings, payback: invest && savings > 0 ? invest / savings : null };
+}
+
+// Speicher: nutzbare Energie und Laufzeit. capacity in kWh, load in kW, dod/eta als Anteil (0…1).
+export function batteryRuntime({ capacity, dod, eta, load }) {
+  pos(capacity, dod, eta, load);
+  if (dod > 1 || eta > 1) throw new Error("range");
+  const usable = capacity * dod;
+  return { usable, hours: (usable * eta) / load };
+}
+// Benötigte Nennkapazität für eine Last über eine Dauer.
+export function batterySize({ load, hours, dod, eta, voltage = null }) {
+  pos(load, hours, dod, eta);
+  if (dod > 1 || eta > 1) throw new Error("range");
+  const kwh = (load * hours) / (dod * eta);
+  return { kwh, ah: voltage ? (kwh * 1000) / voltage : null };
+}
+// Ladezeit von SoC a nach b (Anteile) mit Ladeleistung in kW.
+export function chargeTime({ capacity, socFrom, socTo, power, eta }) {
+  pos(capacity, power, eta);
+  if (!(socFrom >= 0 && socTo <= 1 && socTo > socFrom) || eta > 1) throw new Error("range");
+  const energy = capacity * (socTo - socFrom);
+  return { energy, hours: energy / (power * eta) };
+}

@@ -264,3 +264,118 @@ export function eSeriesView() {
     footer: "Normreihen nach IEC 60063. Gilt für Widerstände, Kondensatoren und Induktivitäten. " + PREFIX_HINT,
   });
 }
+
+// ---------- Photovoltaik & Speicher ----------
+
+const pctIn = (v) => (v === null ? null : v / 100);
+const hours = (h) => (h < 1 ? `${C.fmt(h * 60, 0)} min` : `${C.fmt(h, 1)} h`);
+const euro = (x) => `${C.fmt(x, 0)} €`;
+
+export function pvString() {
+  return calcView({
+    init: { voc: "49,5", vmpp: "41,6", isc: "13,9", pmod: "500", beta: "-0,25", betaMpp: "",
+            tMin: "-10", tMax: "70", uMax: "1000", mppMin: "160", mppMax: "850", iMax: "32", n: "" },
+    inputs: (s, { field }) => [
+      ...section("Modul (Datenblatt, STC)", [
+        field("pmod", "Nennleistung", "Wp"), field("voc", "Leerlaufspannung Voc", "V"),
+        field("vmpp", "MPP-Spannung Vmpp", "V"), field("isc", "Kurzschlussstrom Isc", "A"),
+        field("beta", "Temp.-Koeff. Voc", "%/K"), field("betaMpp", "Temp.-Koeff. Vmpp (optional)", "%/K"),
+      ]),
+      ...section("Zelltemperaturen (Annahme, standortabhängig)", [field("tMin", "Minimum", "°C"), field("tMax", "Maximum", "°C")]),
+      ...section("Wechselrichter-Eingang (Datenblatt)", [
+        field("uMax", "Max. DC-Eingangsspannung", "V"), field("mppMin", "MPP-Bereich min.", "V"),
+        field("mppMax", "MPP-Bereich max.", "V"), field("iMax", "Max. Eingangsstrom", "A"),
+      ]),
+      ...section("Prüfen (optional)", [field("n", "Module pro String", "Stk.")]),
+    ],
+    compute: (s, p) => {
+      const r = C.pvString({ voc: p(s.voc), vmpp: p(s.vmpp), isc: p(s.isc), pmod: p(s.pmod), beta: p(s.beta),
+        betaMpp: p(s.betaMpp), tMin: p(s.tMin), tMax: p(s.tMax), uMax: p(s.uMax), mppMin: p(s.mppMin),
+        mppMax: p(s.mppMax), iMax: p(s.iMax) });
+      const rows = [
+        resultRow("Voc bei Tmin", si(r.vocCold, "V")),
+        resultRow("Vmpp bei Tmax / Tmin", `${C.fmt(r.vmppHot, 1)} / ${C.fmt(r.vmppCold, 1)} V`),
+        resultRow("Max. Module (Spannungsgrenze)", String(r.nMaxVoltage)),
+        resultRow("Module für MPP-Bereich", `${r.nMinMpp} … ${r.nMaxMpp}`),
+        r.ok ? resultRow("Zulässig pro String", `${r.nMin} … ${r.nMax} Module`, "good")
+             : msgRow("Keine Modulanzahl erfüllt alle Bedingungen.", "error"),
+        resultRow("Max. parallele Strings je Eingang", String(r.parallel), r.parallel >= 1 ? "" : "bad"),
+      ];
+      const n = p(s.n);
+      if (n) {
+        const okN = Number.isInteger(n) && n >= r.nMin && n <= r.nMax;
+        rows.push(resultRow(`${n} Module: Voc kalt`, si(n * r.vocCold, "V"), n * r.vocCold <= p(s.uMax) ? "good" : "bad"));
+        rows.push(resultRow(`${n} Module: Leistung`, si(r.pString(n), "Wp")));
+        rows.push(okN ? msgRow("Diese Anzahl liegt im zulässigen Bereich.", "hint")
+                      : msgRow("Diese Anzahl liegt außerhalb des zulässigen Bereichs.", "error"));
+      }
+      return rows;
+    },
+    rangeMsg: "Bitte Eingaben prüfen: MPP min. < MPP max. und Vmpp < Voc.",
+    footer: "U(ϑ) = U_STC · (1 + β·(ϑ − 25 °C)). Ohne eigenen Vmpp-Koeffizienten wird der Voc-Koeffizient verwendet (Näherung). " +
+            "Der Anstieg von Isc mit der Temperatur ist vernachlässigt. Die Beispielwerte ersetzen nicht die Datenblätter " +
+            "und die Auslegungsvorgaben des Wechselrichterherstellers.",
+  });
+}
+
+export function pvYield() {
+  return calcView({
+    init: { kwp: "10", spec: "950", self: "30", price: "0,35", feed: "0,08", invest: "15000", opex: "150" },
+    inputs: (s, { field }) => [
+      ...section("Anlage", [field("kwp", "Leistung", "kWp"), field("spec", "Spezifischer Ertrag", "kWh/kWp·a")]),
+      ...section("Nutzung & Preise", [
+        field("self", "Eigenverbrauchsanteil", "%"), field("price", "Strompreis (Bezug)", "€/kWh"),
+        field("feed", "Einspeisevergütung", "€/kWh"),
+      ]),
+      ...section("Kosten", [field("invest", "Investition", "€"), field("opex", "Betriebskosten", "€/a")]),
+    ],
+    compute: (s, p) => {
+      const r = C.pvYield({ kwp: p(s.kwp), specYield: p(s.spec), selfShare: p(s.self), price: p(s.price),
+                            feedIn: p(s.feed), invest: p(s.invest), opex: p(s.opex) });
+      return [
+        resultRow("Jahresertrag", `${C.fmt(r.e, 0)} kWh`),
+        resultRow("Eigenverbrauch", `${C.fmt(r.self, 0)} kWh`),
+        resultRow("Einspeisung", `${C.fmt(r.grid, 0)} kWh`),
+        resultRow("Ersparnis + Vergütung", `${euro(r.savings)} / Jahr`, r.savings > 0 ? "good" : "bad"),
+        r.payback ? resultRow("Statische Amortisation", `${C.fmt(r.payback, 1)} Jahre`) : msgRow("Keine Amortisation (Ersparnis ≤ 0 oder keine Investition).", "warn"),
+      ];
+    },
+    rangeMsg: "Der Eigenverbrauchsanteil muss zwischen 0 und 100 % liegen.",
+    footer: "Alle Werte sind Beispiele, bitte eigene eintragen. Den spezifischen Ertrag für deinen Standort, deine Ausrichtung und Neigung " +
+            "liefert z. B. PVGIS (EU-Kommission). Statische Rechnung ohne Degradation, Preisänderungen, Zinsen und Steuern.",
+  });
+}
+
+export function battery() {
+  return calcView({
+    init: { mode: "runtime", cap: "10", dod: "90", eta: "95", load: "500", hours: "8", volt: "48", from: "20", to: "80", power: "3k" },
+    inputs: (s, { field, set }) => [
+      ...section("Berechnung", [segmented([["runtime", "Laufzeit"], ["size", "Kapazität"], ["charge", "Ladezeit"]], s.mode, (v) => set("mode", v))]),
+      ...section("Speicher", [
+        s.mode !== "size" ? field("cap", "Nennkapazität", "kWh") : null,
+        s.mode !== "charge" ? field("dod", "Nutzbare Entladetiefe (DoD)", "%") : null,
+        field("eta", s.mode === "charge" ? "Lade-Wirkungsgrad" : "Wirkungsgrad (Entladung + WR)", "%"),
+        s.mode === "size" ? field("volt", "Systemspannung (für Ah)", "V") : null,
+      ].filter(Boolean)),
+      ...section(s.mode === "charge" ? "Laden" : "Verbraucher", s.mode === "charge"
+        ? [field("from", "Ladezustand von", "%"), field("to", "Ladezustand bis", "%"), field("power", "Ladeleistung", "W")]
+        : [field("load", "Mittlere Leistung", "W"), s.mode === "size" ? field("hours", "Gewünschte Dauer", "h") : null].filter(Boolean)),
+    ],
+    compute: (s, p) => {
+      if (s.mode === "runtime") {
+        const r = C.batteryRuntime({ capacity: p(s.cap), dod: pctIn(p(s.dod)), eta: pctIn(p(s.eta)), load: (p(s.load) ?? 0) / 1000 });
+        return [resultRow("Nutzbare Energie", `${C.fmt(r.usable, 2)} kWh`), resultRow("Laufzeit", hours(r.hours), "good")];
+      }
+      if (s.mode === "size") {
+        const r = C.batterySize({ load: (p(s.load) ?? 0) / 1000, hours: p(s.hours), dod: pctIn(p(s.dod)), eta: pctIn(p(s.eta)), voltage: p(s.volt) });
+        return [resultRow("Benötigte Nennkapazität", `${C.fmt(r.kwh, 2)} kWh`, "good"),
+                r.ah ? resultRow(`entspricht bei ${C.fmt(p(s.volt))} V`, `${C.fmt(r.ah, 0)} Ah`) : null];
+      }
+      const r = C.chargeTime({ capacity: p(s.cap), socFrom: pctIn(p(s.from)), socTo: pctIn(p(s.to)), power: (p(s.power) ?? 0) / 1000, eta: pctIn(p(s.eta)) });
+      return [resultRow("Nachzuladende Energie", `${C.fmt(r.energy, 2)} kWh`), resultRow("Ladezeit", hours(r.hours), "good")];
+    },
+    rangeMsg: "Bitte Prozentwerte zwischen 0 und 100 eingeben (Ladezustand „bis“ größer als „von“).",
+    footer: "Mittelwertrechnung mit konstanter Leistung. Alterung, Temperatur, Eigenverbrauch des Systems und das Abregeln " +
+            "der Ladeleistung bei hohem Ladezustand sind nicht berücksichtigt. DoD und Wirkungsgrad aus dem Datenblatt entnehmen. " + PREFIX_HINT,
+  });
+}
