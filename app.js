@@ -191,7 +191,7 @@ function settingsView() {
       selectRow("Grenzwert Spannungsfall", opts, String(settings.maxPercent), (e) => (settings.maxPercent = Number(e.target.value))),
     ], "Wird für die Farbmarkierung und als Vorgabe beim Mindestquerschnitt verwendet. Welcher Grenzwert gilt, hängt von der Anlage und den anzuwendenden Regeln ab."),
     ...section("Hinweis", [h("div", { class: "row" }, h("span", { class: "hint" }, DISCLAIMER))]),
-    ...section("", [resultRow("Version", "1.1.0 (Web)")]),
+    ...section("", [resultRow("Version", "1.1.1 (Web)")]),
   ];
 }
 
@@ -228,4 +228,14 @@ function route() {
 window.addEventListener("hashchange", route);
 route();
 
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then((reg) => {
+  // Bei jedem Zurückkehren in die App nach Updates schauen.
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) reg.update(); });
+});
+// Sobald eine neue Version aktiv ist: einmal neu laden, damit sie sofort sichtbar wird.
+// (Nicht beim allerersten Start, da gibt es noch keine alte Version.)
+let reloaded = false;
+const hadController = !!navigator.serviceWorker?.controller;
+navigator.serviceWorker?.addEventListener("controllerchange", () => {
+  if (hadController && !reloaded) { reloaded = true; location.reload(); }
+});
