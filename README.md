@@ -35,7 +35,7 @@ Deinstallieren: in der App ⋮ → „ElektroRechner deinstallieren“ oder übe
 
 Die Anleitung steht auch in der App unter **„App installieren“**.
 
-## Funktionen (v1.9.1)
+## Funktionen (v1.9.2)
 
 **Grundlagen**
 - Ohmsches Gesetz & Leistung (zwei beliebige von U, I, R, P)
@@ -122,7 +122,7 @@ Die Anleitung steht auch in der App unter **„App installieren“**.
 - Tabellen & Praxiswerte (LS-Auslösebereiche, I₂, Abschaltzeiten, Nennquerschnitte, Bemessungsströme, κ/α, Normreihen)
 
 **Arbeiten mit der App**
-- **Eingabe:** Einstellung „Ziffernblock | Volle Tastatur“ für Zahlenfelder (der iPhone-Ziffernblock hat kein Minus und keine Buchstaben); lange Auswahltexte ragen auf schmalen Displays nicht mehr über den Rand; Überlauf bei extremen Werten wird als Bereichshinweis statt „NaN“ angezeigt
+- **Eingabe:** Einstellung „Ziffernblock | Volle Tastatur“ für Zahlenfelder, auch in Prüfprotokoll, Kalkulation, KNX und Kabelbuch (der iPhone-Ziffernblock hat kein Minus und keine Buchstaben; R_iso im Prüfprotokoll immer mit voller Tastatur für „>500“); lange Auswahltexte ragen auf schmalen Displays nicht mehr über den Rand; Überlauf bei extremen Werten wird als Bereichshinweis statt „NaN“ angezeigt
 - **Suche** auf der Startseite (auch nach Synonymen, z. B. „Wallbox“, „FI“, „pq-Formel“); Enter öffnet den ersten Treffer
 - **Zuletzt verwendet**: die letzten Rechner oben auf der Startseite
 - **Datensicherung** (Einstellungen): Projekte, Favoriten und Einstellungen als Datei exportieren und wieder einspielen (iPhone: Teilen-Menü → „In Dateien sichern“)

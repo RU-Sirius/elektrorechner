@@ -285,7 +285,7 @@ function settingsView() {
     ...section("Haftungshinweis", [h("div", { class: "row" }, h("span", { class: "hint" }, LEGAL))]),
     ...section("Hinweis zu Leitungsberechnungen", [h("div", { class: "row" }, h("span", { class: "hint" }, DISCLAIMER))]),
     ...X.appsSection(),
-    ...section("", [resultRow("Version", "1.9.1 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
+    ...section("", [resultRow("Version", "1.9.2 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
   ];
 }
 

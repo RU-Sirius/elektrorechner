@@ -1,6 +1,6 @@
 // Gemeinsame Bausteine für Dokument-Werkzeuge (Kalkulation, KNX, Kabelbuch): lokaler Speicher, Eingabefelder,
 // aufklappbare Kartenlisten, Projektliste, Datei-Export. Alles bleibt im Browser (Datensicherung über die Einstellungen).
-import { h, section, msgRow } from "./ui.js";
+import { h, section, msgRow, keyboardMode } from "./ui.js";
 
 export const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 export const today = () => new Date().toISOString().slice(0, 10);
@@ -29,7 +29,7 @@ export function docStore(key) {
 // Eingabezeile, die direkt in obj[key] schreibt
 export function field(label, obj, key, { unit = "", mode = "text", type = "text", placeholder = "–", onChange, save } = {}) {
   return h("label", { class: "row" + (mode === "text" ? " wide" : "") }, h("span", { class: "label" }, label),
-    h("input", { type, inputmode: type === "text" ? mode : undefined, value: obj[key] ?? "", placeholder, autocomplete: "off", autocapitalize: mode === "text" ? "sentences" : "off",
+    h("input", { type, inputmode: type === "text" ? (mode === "decimal" && keyboardMode() !== "full" ? "decimal" : "text") : undefined, value: obj[key] ?? "", placeholder, autocomplete: "off", autocapitalize: mode === "text" ? "sentences" : "off",
       oninput: (e) => { obj[key] = e.target.value; save?.(); onChange?.(); } }),
     h("span", { class: "unit" }, unit));
 }

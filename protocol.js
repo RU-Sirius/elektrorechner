@@ -2,7 +2,7 @@
 // Alles bleibt lokal im Browser (Datensicherung über die Einstellungen).
 import * as C from "./calc.js";
 import * as C4 from "./calc4.js";
-import { h, section, msgRow, resultRow } from "./ui.js";
+import { h, section, msgRow, resultRow, keyboardMode } from "./ui.js";
 import { sharePdf, safeFilename } from "./pdf.js";
 
 const KEY = "pruefprotokolle";
@@ -84,7 +84,7 @@ function editView(p) {
   // Eingabezeile, die direkt ins Protokoll schreibt
   const inp = (label, obj, key, { unit = "", mode = "text", placeholder = "–", type = "text", onChange } = {}) =>
     h("label", { class: "row" + (mode === "text" ? " wide" : "") }, h("span", { class: "label" }, label),
-      h("input", { type, inputmode: type === "text" ? mode : undefined, value: obj[key] ?? "", placeholder, autocomplete: "off", autocapitalize: mode === "text" ? "sentences" : "off",
+      h("input", { type, inputmode: type === "text" ? (mode === "decimal" && keyboardMode() !== "full" ? "decimal" : "text") : undefined, value: obj[key] ?? "", placeholder, autocomplete: "off", autocapitalize: mode === "text" ? "sentences" : "off",
         oninput: (e) => { obj[key] = e.target.value; persist(); onChange?.(); } }),
       h("span", { class: "unit" }, unit));
   const seg = (obj, key, opts, onPick) => h("div", { class: "row seg-row" }, h("div", { class: "seg" },
@@ -117,7 +117,7 @@ function editView(p) {
         inp("Nr.", c, "nr", { onChange: on }), inp("Bezeichnung", c, "name", { placeholder: "z. B. Steckdosen Küche", onChange: on }),
         inp("Schutzorgan", c, "device", { placeholder: "z. B. B16", onChange: on }), inp("Leitung", c, "cable", { placeholder: "z. B. NYM-J 3×1,5" }),
         inp("RCD", c, "rcd", { placeholder: "z. B. 30 mA Typ A" }),
-        inp("Zs (Schleifenimpedanz)", c, "zs", { unit: "Ω", mode: "decimal", onChange: on }), inp("R_iso", c, "riso", { unit: "MΩ", mode: "decimal", onChange: on }),
+        inp("Zs (Schleifenimpedanz)", c, "zs", { unit: "Ω", mode: "decimal", onChange: on }), inp("R_iso", c, "riso", { unit: "MΩ", mode: "text", placeholder: "z. B. >500", onChange: on }),
         inp("R_PE (Schutzleiter)", c, "rpe", { unit: "Ω", mode: "decimal", onChange: on }), inp("RCD-Auslösezeit", c, "t", { unit: "ms", mode: "decimal", onChange: on }),
         inp("RCD-Auslösestrom", c, "i", { unit: "mA", mode: "decimal", onChange: on }), inp("Bemerkung", c, "note"),
         h("div", { class: "row pp-info" }, detail),
