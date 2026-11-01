@@ -35,7 +35,9 @@ function encode(text) {
 
 // Grobe Zeichenbreite für Helvetica (Anteil der Schriftgröße) – für Zeilenumbruch und Rechtsbündigkeit.
 const charW = (ch) => (/[il.,:;'|!]/.test(ch) ? 0.28 : /[mwMW]/.test(ch) ? 0.83 : /[A-Z]/.test(ch) ? 0.67 : /[0-9]/.test(ch) ? 0.556 : ch === " " ? 0.278 : 0.5);
-const textW = (t, size) => [...String(t)].reduce((a, ch) => a + charW(ch), 0) * size;
+// Breite des tatsächlich gedruckten Textes (nach Ersetzungen wie Ω → „Ohm“)
+const printed = (t) => [...supRuns(t)].map((ch) => (REPLACE[ch] !== undefined ? printed(REPLACE[ch]) : ch)).join("");
+const textW = (t, size) => [...printed(t)].reduce((a, ch) => a + charW(ch), 0) * size;
 function wrap(text, size, width) {
   const words = String(text).split(/\s+/);
   const lines = [];
@@ -49,11 +51,13 @@ function wrap(text, size, width) {
 }
 
 /**
- * doc = { title, subtitle, blocks: [{ heading?, rows?: [[label, value]], text? , big? }], footer }
+ * doc = { title, subtitle, landscape?, blocks: [{ heading?, rows?: [[label, value]], text?, big?, table?, signatures? }], footer }
+ * table = { cols: [{ title, w (Anteil der Breite), align: "left"|"right"|"center" }], rows: [[…]], bad?: [Zeilenindex, …] (fett) }
+ * signatures = ["Ort, Datum", "Unterschrift"] → Unterschriftslinien
  * Gibt die PDF-Datei als Uint8Array zurück.
  */
 export function buildPdf(doc) {
-  const W = 595.28, H = 841.89, M = 50, CONTENT_W = W - 2 * M;
+  const W = doc.landscape ? 841.89 : 595.28, H = doc.landscape ? 595.28 : 841.89, M = doc.landscape ? 36 : 50, CONTENT_W = W - 2 * M;
   const pages = [];
   let ops = [], y = H - M;
   const newPage = () => { if (ops.length) pages.push(ops); ops = []; y = H - M; };
@@ -61,6 +65,33 @@ export function buildPdf(doc) {
   const text = (x, yy, s, size, bold = false, gray = 0) =>
     ops.push(`BT /${bold ? "F2" : "F1"} ${size} Tf ${gray} g ${x.toFixed(2)} ${yy.toFixed(2)} Td (${encode(s)}) Tj ET`);
   const line = (yy) => ops.push(`0.8 G 0.5 w ${M} ${yy.toFixed(2)} m ${W - M} ${yy.toFixed(2)} l S`);
+  // Tabelle mit Kopfzeile (wird auf jeder neuen Seite wiederholt), Zellen mit Zeilenumbruch
+  function table(t) {
+    const FS = 8, LH = 10, PAD = 3, total = t.cols.reduce((a, c) => a + c.w, 0);
+    const xs = []; let x = M; for (const c of t.cols) { xs.push(x); x += (c.w / total) * CONTENT_W; }
+    const cw = (i) => (t.cols[i].w / total) * CONTENT_W - 2 * PAD;
+    // Fettschrift ist breiter als die Schätzung → mit Zuschlag umbrechen
+    const lines = (i, txt, bold) => wrap(String(txt ?? ""), FS * (bold ? 1.25 : 1), cw(i));
+    const cell = (i, txt, yy, bold) => {
+      const c = t.cols[i], lns = lines(i, txt, bold);
+      lns.forEach((l, k) => { const lw = textW(l, FS) * (bold ? 1.1 : 1); const tx = c.align === "right" ? xs[i] + PAD + cw(i) - lw : c.align === "center" ? xs[i] + PAD + (cw(i) - lw) / 2 : xs[i] + PAD;
+        text(tx, yy - LH * (k + 1) + 2, l, FS, bold); });
+    };
+    const rowH = (r, bold = false) => Math.max(...r.map((v, i) => lines(i, v, bold).length)) * LH + 2 * PAD - 2;
+    const header = () => {
+      const hh = rowH(t.cols.map((c) => c.title), true);
+      ops.push(`0.92 g ${M} ${(y - hh).toFixed(2)} ${CONTENT_W} ${hh.toFixed(2)} re f`);
+      t.cols.forEach((c, i) => cell(i, c.title, y - PAD + 2, true)); y -= hh; line(y);
+    };
+    need(40); header();
+    t.rows.forEach((r, ri) => {
+      const rh = rowH(r);
+      if (y - rh < M + 30) { newPage(); header(); }
+      r.forEach((v, i) => cell(i, v, y - PAD + 2, (t.bad ?? []).includes(ri) && i === r.length - 1));
+      y -= rh; line(y);
+    });
+    y -= 4;
+  }
 
   text(M, y - 18, doc.title, 18, true); y -= 26;
   if (doc.subtitle) { for (const l of wrap(doc.subtitle, 9, CONTENT_W)) { text(M, y - 9, l, 9, false, 0.35); y -= 12; } }
@@ -70,13 +101,19 @@ export function buildPdf(doc) {
     if (b.big) { need(30); y -= 8; text(M, y - 14, b.big, 14, true); y -= 20; if (b.text) { text(M, y - 9, b.text, 9, false, 0.35); y -= 14; } continue; }
     if (b.heading) { need(28); y -= 6; text(M, y - 9, b.heading.toUpperCase(), 9, true, 0.35); y -= 14; }
     if (b.text) { for (const l of wrap(b.text, 9, CONTENT_W)) { need(12); text(M, y - 9, l, 9, false, 0.25); y -= 12; } }
+    if (b.table) table(b.table);
+    if (b.signatures) {
+      need(60); y -= 40; const n = b.signatures.length, gap = 30, w = (CONTENT_W - gap * (n - 1)) / n;
+      b.signatures.forEach((lbl, i) => { const x0 = M + i * (w + gap); ops.push(`0 G 0.6 w ${x0.toFixed(2)} ${y.toFixed(2)} m ${(x0 + w).toFixed(2)} ${y.toFixed(2)} l S`); text(x0, y - 10, lbl, 8, false, 0.4); });
+      y -= 18;
+    }
     for (const [label, value] of b.rows ?? []) {
       const lab = wrap(label, 10, CONTENT_W * 0.55), val = wrap(value, 10, CONTENT_W * 0.42);
       const n = Math.max(lab.length, val.length);
       need(n * 13 + 4);
       for (let i = 0; i < n; i++) {
         if (lab[i]) text(M, y - 10, lab[i], 10);
-        if (val[i]) text(W - M - textW(val[i], 10), y - 10, val[i], 10, true);
+        if (val[i]) text(W - M - textW(val[i], 10) * 1.03, y - 10, val[i], 10, true); // Fettschrift etwas breiter
         y -= 13;
       }
       y -= 3; line(y); y -= 3;

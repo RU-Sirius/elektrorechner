@@ -35,7 +35,7 @@ Deinstallieren: in der App ⋮ → „ElektroRechner deinstallieren“ oder übe
 
 Die Anleitung steht auch in der App unter **„App installieren“**.
 
-## Funktionen (v1.7.0)
+## Funktionen (v1.8.0)
 
 **Grundlagen**
 - Ohmsches Gesetz & Leistung (zwei beliebige von U, I, R, P)
@@ -60,7 +60,9 @@ Die Anleitung steht auch in der App unter **„App installieren“**.
 - Selektivität von gG-Sicherungen (Nennstromverhältnis ≥ 1,6 : 1)
 - UVT-Zuleitung: Gesamtprüfung Überlast, Spannungsfall, Abschaltung
 - Trafo- & Einspeiseberechnung (In, Ik3, Zk, Auslastung)
-- Messwerte prüfen (Protokoll-Hilfe): bis zu 12 Stromkreise mit Schutzorgan (z. B. B16), Zs, R_iso, RCD-Auslösezeit und -strom gegen vom Anwender festgelegte Grenzwerte; Dokumentation per PDF
+- **Prüf- und Messprotokoll:** beliebig viele Protokolle je Anlage, Verteiler mit Stromkreisen (Schutzorgan z. B. B16, Leitung, RCD), Messwerte Zs, R_iso (auch „>500“), R_PE, RCD-Auslösezeit und -strom;
+  Grenzwerte legt der Prüfer selbst fest (keine Normwerte hinterlegt), Bewertung i. O./n. i. O. je Stromkreis mit Zs,max und Ik, Besichtigen/Erproben, Mängel, Gesamturteil, nächster Prüftermin;
+  PDF im A4-Querformat mit Messwerttabelle je Verteiler und Unterschriftsfeldern; „Als Wiederholungsprüfung kopieren“ übernimmt die Struktur ohne Messwerte
 
 **Anschlüsse & Beleuchtung**
 - Baustromanschluss (Leistungsbilanz mit Gleichzeitigkeit → Bemessungsstrom)
@@ -128,7 +130,7 @@ geltenden Normen bzw. Herstellerunterlagen eingegeben.
 
 ## Entwicklung
 - `calc.js`: Rechenlogik · Tests: `node test.mjs`
-- `ui.js`: gemeinsame Bausteine · `tools.js`, `tools2.js`, `tools3.js`, `tools4.js`: Rechner · `calc4.js`: Logik Beleuchtung/Motor/Messwerte · `extras.js`: Suche, Zuletzt verwendet, Datensicherung (in allen drei Apps gleich) · `net.js`: Netzwerk-Logik
+- `ui.js`: gemeinsame Bausteine · `tools.js`, `tools2.js`, `tools3.js`, `tools4.js`: Rechner · `calc4.js`: Logik Beleuchtung/Motor/Messwerte · `protocol.js`: Prüfprotokoll · `pdf.js`: PDF inkl. Tabellen/Querformat · `extras.js`: Suche, Zuletzt verwendet, Datensicherung (in allen drei Apps gleich) · `net.js`: Netzwerk-Logik
 - `projects.js`: Favoriten, Projekte, Berichte · `pdf.js`: PDF-Erzeugung ohne externe Bibliothek
 - `auto.js`: Logik Regelungs-/Steuerungstechnik · `autotools.js`: Ansichten · `chart.js`: SVG-Diagramme
 - `speedtest.js` + `speedtest/`: Speedtest mit Zufallsdaten-Testdateien (werden vom Service Worker bewusst nicht gecacht)

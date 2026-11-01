@@ -84,3 +84,19 @@ button.action { width: 100%; border: 0; background: none; font: inherit; color: 
 .search-input:focus { box-shadow: 0 0 0 2px var(--accent); }
 [hidden] { display: none !important; }
 .group + .group { margin-top: 20px; }
+/* ---------- Prüfprotokoll ---------- */
+.pp-list { display: flex; flex-direction: column; gap: 8px; }
+.pp-circuit { background: var(--card); border-radius: 10px; overflow: hidden; }
+.pp-circuit > summary { list-style: none; display: flex; align-items: center; gap: 8px; padding: 12px 16px; cursor: pointer; font-weight: 600; }
+.pp-circuit > summary::-webkit-details-marker { display: none; }
+.pp-circuit > summary::before { content: "›"; color: var(--sub); transition: transform .15s; display: inline-block; }
+.pp-circuit[open] > summary::before { transform: rotate(90deg); }
+.pp-circuit > .group { border-radius: 0; border-top: .5px solid var(--sep); }
+.pp-sum { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-badge { font-size: 13px; padding: 2px 8px; border-radius: 6px; color: var(--sub); background: color-mix(in srgb, var(--sub) 15%, transparent); white-space: nowrap; }
+.pp-badge.ok { color: var(--good); background: color-mix(in srgb, var(--good) 15%, transparent); }
+.pp-badge.bad { color: var(--bad); background: color-mix(in srgb, var(--bad) 15%, transparent); }
+.pp-info { font-size: 13px; color: var(--sub); } .pp-info:empty, .pp-info > div:empty { display: none; }
+.pp-text { width: 100%; font: inherit; font-size: 15px; border: 0; background: transparent; color: var(--text); resize: vertical; outline: none; }
+.row input[type="date"] { font: inherit; background: transparent; color: var(--text); border: 0; text-align: right; }
+.pp-info:has(.pp-detail:empty) { display: none; }

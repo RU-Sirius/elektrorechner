@@ -4,6 +4,7 @@ import * as T from "./tools.js";
 import * as T2 from "./tools2.js";
 import * as T3 from "./tools3.js";
 import * as T4 from "./tools4.js";
+import * as PR from "./protocol.js";
 import { installView } from "./install.js";
 import * as AT from "./autotools.js";
 import { speedtestView } from "./speedtest.js";
@@ -36,7 +37,7 @@ const TOOLS = {
   stardelta: ["Stern-Dreieck-Umrechnung", "Stern-Dreieck", E, "Y", T.starDelta],
   motor: ["Motoranlauf & Motorschutz", "Motoranlauf", E, "M", T4.motorStart],
   lighting: ["Beleuchtung (Wirkungsgradverfahren)", "Beleuchtung", N, "💡", T4.lighting],
-  measure: ["Messwerte prüfen (Protokoll-Hilfe)", "Messprotokoll", S, "✓", T4.measurement],
+  protocol: ["Prüf- & Messprotokoll (Verteiler, Stromkreise, PDF)", "Prüfprotokoll", S, "📋", PR.protocolView],
   overload: ["Schutzorgan / Absicherung", "Schutzorgan", S, "⚡", T2.overload],
   loop: ["Schleifenimpedanz & Abschaltbedingung", "Schleifenimpedanz", S, "Zs", T2.loop],
   ik: ["Kurzschlussstrom", "Kurzschlussstrom", S, "Ik", T2.shortCircuit],
@@ -82,7 +83,7 @@ const nav = (key) => navRow(key, TOOLS[key][0], TOOLS[key][2], TOOLS[key][3]);
 const GROUPS = [
   ["Grundlagen", ["ohm", "combine", "divider", "db"]],
   ["Leitungen & Energietechnik", ["power", "section", "drop", "maxlen", "wire", "comp", "stardelta", "motor"]],
-  ["Schutztechnik & Einspeisung", ["overload", "loop", "ik", "selectivity", "feeder", "trafo", "measure"]],
+  ["Schutztechnik & Einspeisung", ["overload", "loop", "ik", "selectivity", "feeder", "trafo", "protocol"]],
   ["Anschlüsse & Beleuchtung", ["site", "ev", "lighting"]],
   ["Photovoltaik & Speicher", ["pvstring", "pvyield", "battery"]],
   ["Sicherheitstechnik", ["emlight", "alarm", "saa"]],
@@ -114,7 +115,7 @@ const SEARCH_EXTRA = { ohm: "spannung strom widerstand leistung", section: "quer
   loopsim: "regler pid regelung", bode: "regelung stabilitaet", zn: "regler pid einstellen", analog: "4 20 ma sps s7 skalieren", numbers: "hex binaer bcd gray float ieee",
   logic: "kv diagramm boolesche wahrheitstabelle", vfd: "fu umrichter motor drehzahl", rtd: "temperatur fuehler pt100", speed: "internet geschwindigkeit",
   ipv4: "subnetz maske netzwerk cidr", subnetting: "subnetz aufteilen", poe: "power over ethernet", fiber: "glasfaser lwl", nettables: "kabel cat ethernet", ip: "schutzart", tables: "werte tabelle",
-  motor: "anlauf stern dreieck sanftanlauf motorschutz anlaufstrom", lighting: "licht lux leuchten lichtplanung", measure: "pruefung messung protokoll vde 0100 600 isolation rcd fi" };
+  motor: "anlauf stern dreieck sanftanlauf motorschutz anlaufstrom", lighting: "licht lux leuchten lichtplanung", protocol: "pruefung messung messprotokoll pruefprotokoll vde 0100 600 isolation rcd fi schleifenimpedanz verteiler stromkreis e check" };
 
 function ohmView() {
   const s = { u: "", i: "", r: "", p: "" };
@@ -274,17 +275,18 @@ function settingsView() {
     ...section("Haftungshinweis", [h("div", { class: "row" }, h("span", { class: "hint" }, LEGAL))]),
     ...section("Hinweis zu Leitungsberechnungen", [h("div", { class: "row" }, h("span", { class: "hint" }, DISCLAIMER))]),
     ...X.appsSection(),
-    ...section("", [resultRow("Version", "1.7.0 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
+    ...section("", [resultRow("Version", "1.8.0 (Web)"), resultRow("Entwickelt von", "R. U. Sirius?"), resultRow("Lizenz", "MIT")]),
   ];
 }
 
 // ---------- Routing ----------
 const PAGES = { settings: ["Einstellungen", settingsView], projects: ["Projekte", projectsView], install: ["App installieren", installView] };
 function route() {
-  const [key, arg] = location.hash.slice(1).split("/");
+  let [key, arg] = location.hash.slice(1).split("/");
+  if (key === "measure") key = "protocol"; // frühere Messwert-Hilfe
   clearCurrentState();
   let title, nodes, isTool = false;
-  if (key in TOOLS) { title = TOOLS[key][1]; nodes = TOOLS[key][4](); isTool = true; X.recent.track(key); }
+  if (key in TOOLS) { title = TOOLS[key][1]; nodes = TOOLS[key][4](arg); isTool = true; X.recent.track(key); }
   else if (key in PAGES) { title = PAGES[key][0]; nodes = PAGES[key][1](); }
   else if (key === "report" && arg) { title = "Projektbericht"; nodes = reportView(decodeURIComponent(arg)); }
   else { title = "ElektroRechner"; nodes = home(); }
@@ -300,7 +302,7 @@ function route() {
   }
   view.replaceChildren(...nodes);
   setPreset(null); // nicht verbrauchte Voreinstellung verwerfen
-  if (isTool && !["tables", "nettables"].includes(key)) {
+  if (isTool && !["tables", "nettables", "protocol"].includes(key)) {
     view.append(saveBar(key, title, view), h("div", { class: "print-only" }, `ElektroRechner – Built by R. U. Sirius? · ${LEGAL}`));
   }
   window.scrollTo(0, 0);
