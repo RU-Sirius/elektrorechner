@@ -1,4 +1,6 @@
 import * as C from "./calc.js";
+import { DISCLAIMER, settings, h, section, inputRow, resultRow, msgRow, selectRow, segmented, navRow } from "./ui.js";
+import * as T from "./tools.js";
 
 const view = document.getElementById("view");
 const header = document.querySelector("header");
@@ -6,57 +8,30 @@ const titleEl = document.getElementById("title");
 const back = document.getElementById("back");
 back.onclick = () => (location.hash = "");
 
-const DISCLAIMER = "Vereinfachte Berechnung ohne Leitungsreaktanz und ohne Temperaturkorrektur. " +
-  "Strombelastbarkeit, Verlegeart, Häufung, Kurzschluss- und Abschaltbedingungen werden nicht geprüft. " +
-  "Das Ergebnis ersetzt keine normgerechte Bemessung durch eine Elektrofachkraft.";
-
-const settings = {
-  get maxPercent() { return Number(localStorage.getItem("maxPercent")) || 3; },
-  set maxPercent(v) { localStorage.setItem("maxPercent", String(v)); },
-};
-
-// ---------- kleine DOM-Helfer ----------
-const h = (tag, attrs = {}, ...children) => {
-  const el = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
-    else if (k === "class") el.className = v;
-    else if (v !== undefined && v !== null && v !== false) el.setAttribute(k, v);
-  }
-  for (const c of children.flat()) if (c != null) el.append(c);
-  return el;
-};
-const section = (title, rows, footer) => [
-  title ? h("div", { class: "section-title" }, title) : null,
-  h("div", { class: "group" }, rows),
-  footer ? h("div", { class: "footer" }, footer) : null,
-].filter(Boolean);
-const inputRow = (label, unit, value, oninput, id) =>
-  h("label", { class: "row" }, h("span", { class: "label" }, label),
-    h("input", { type: "text", inputmode: "decimal", value, placeholder: "–", id, oninput, autocomplete: "off" }),
-    h("span", { class: "unit" }, unit));
-const resultRow = (label, value, cls = "") =>
-  h("div", { class: "row" }, h("span", { class: "label" }, label), h("span", { class: "value " + cls }, value));
-const msgRow = (text, cls = "hint") => h("div", { class: "row" }, h("span", { class: cls }, text));
-const selectRow = (label, options, value, onchange) =>
-  h("label", { class: "row" }, h("span", { class: "label" }, label),
-    h("select", { onchange }, options.map(([v, t]) => h("option", { value: v, selected: v === value }, t))));
-const segmented = (options, value, onpick) =>
-  h("div", { class: "row seg-row" }, h("div", { class: "seg" },
-    options.map(([v, t]) => h("button", { class: v === value ? "on" : "", onclick: () => onpick(v) }, t))));
-const navRow = (hash, label, color, icon) =>
-  h("a", { class: "row", href: "#" + hash },
-    h("span", { class: "icon", style: `background:${color}` }, icon), h("span", { class: "label" }, label));
-
 // ---------- Ansichten ----------
 function home() {
   return [
-    ...section("Grundlagen", [navRow("ohm", "Ohmsches Gesetz & Leistung", "#ff9500", "Ω")]),
-    ...section("Leitungen", [
-      navRow("drop", "Spannungsfall", "#34c759", "↘"),
-      navRow("section", "Mindestquerschnitt", "#ff9500", "⌀"),
+    ...section("Grundlagen", [
+      navRow("ohm", "Ohmsches Gesetz & Leistung", "#ff9500", "Ω"),
+      navRow("combine", "Reihen- & Parallelschaltung", "#ff9500", "⫴"),
+      navRow("divider", "Spannungsteiler", "#ff9500", "÷"),
+      navRow("db", "Dezibel-Rechner", "#ff9500", "dB"),
     ]),
-    ...section("Bauteile", [navRow("resistor", "Widerstands-Farbcode", "#5856d6", "▥")]),
+    ...section("Energietechnik", [
+      navRow("power", "Leistung 1~/3~ & Motorstrom", "#34c759", "P"),
+      navRow("drop", "Spannungsfall", "#34c759", "↘"),
+      navRow("section", "Mindestquerschnitt", "#34c759", "⌀"),
+      navRow("wire", "Leitungswiderstand & Temperatur", "#34c759", "ϑ"),
+      navRow("comp", "Blindleistungskompensation", "#34c759", "C"),
+      navRow("stardelta", "Stern-Dreieck-Umrechnung", "#34c759", "Y"),
+    ]),
+    ...section("Elektronik", [
+      navRow("led", "LED-Vorwiderstand", "#5856d6", "◐"),
+      navRow("resistor", "Widerstands-Farbcode", "#5856d6", "▥"),
+      navRow("eseries", "E-Reihen-Normwerte", "#5856d6", "E"),
+      navRow("reactance", "Blindwiderstand & Resonanz", "#5856d6", "X"),
+      navRow("tau", "RC/RL-Zeitkonstante", "#5856d6", "τ"),
+    ]),
     ...section("", [navRow("settings", "Einstellungen", "#8e8e93", "⚙")]),
   ];
 }
@@ -216,7 +191,7 @@ function settingsView() {
       selectRow("Grenzwert Spannungsfall", opts, String(settings.maxPercent), (e) => (settings.maxPercent = Number(e.target.value))),
     ], "Wird für die Farbmarkierung und als Vorgabe beim Mindestquerschnitt verwendet. Welcher Grenzwert gilt, hängt von der Anlage und den anzuwendenden Regeln ab."),
     ...section("Hinweis", [h("div", { class: "row" }, h("span", { class: "hint" }, DISCLAIMER))]),
-    ...section("", [resultRow("Version", "1.0.0 (Web)")]),
+    ...section("", [resultRow("Version", "1.1.0 (Web)")]),
   ];
 }
 
@@ -228,6 +203,17 @@ const routes = {
   section: ["Mindestquerschnitt", () => cableView("section")],
   resistor: ["Farbcode", resistorView],
   settings: ["Einstellungen", settingsView],
+  combine: ["Reihe & Parallel", T.combine],
+  divider: ["Spannungsteiler", T.voltageDivider],
+  db: ["Dezibel", T.decibel],
+  power: ["Leistung", T.acPower],
+  wire: ["Leitungswiderstand", T.wireResistance],
+  comp: ["Kompensation", T.compensation],
+  stardelta: ["Stern-Dreieck", T.starDelta],
+  led: ["LED-Vorwiderstand", T.led],
+  eseries: ["E-Reihen", T.eSeriesView],
+  reactance: ["Blindwiderstand", T.reactance],
+  tau: ["Zeitkonstante", T.timeConstant],
 };
 function route() {
   const key = location.hash.slice(1);

@@ -1,9 +1,14 @@
 // Rechenlogik – 1:1 aus dem Swift-Package CalcCore portiert.
 
+const SI_FACTORS = { p: 1e-12, n: 1e-9, u: 1e-6, "µ": 1e-6, m: 1e-3, k: 1e3, M: 1e6, G: 1e9 };
+
+// Zahl mit Dezimalkomma/-punkt und optionalem SI-Präfix, z. B. "4,7k", "100n", "2,2µ".
 export function parse(text) {
   const s = String(text ?? "").trim().replace(",", ".");
   if (s === "") return null;
-  const v = Number(s);
+  const m = s.match(/^([-+]?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?)\s*([pnuµmkMG])?$/);
+  if (!m) return null;
+  const v = Number(m[1]) * (m[2] ? SI_FACTORS[m[2]] : 1);
   return Number.isFinite(v) ? v : null;
 }
 
@@ -101,3 +106,133 @@ export function si(value, unit) {
 export function fmt(value, maxDigits = 2) {
   return value.toLocaleString("de-DE", { maximumFractionDigits: maxDigits });
 }
+
+
+// ===================== Erweiterungen =====================
+
+const pos = (...v) => { if (!v.every((x) => x !== null && x > 0 && Number.isFinite(x))) throw new Error("positive"); };
+const cosOk = (c) => { if (!(c > 0 && c <= 1)) throw new Error("cos"); };
+
+// Reihen- und Parallelschaltung. Für C gilt es umgekehrt (Reihe = Kehrwertsumme).
+export function series(values) { pos(...values); return values.reduce((a, b) => a + b, 0); }
+export function parallel(values) { pos(...values); return 1 / values.reduce((a, b) => a + 1 / b, 0); }
+
+// Unbelasteter Spannungsteiler.
+export function divider({ uin, r1, r2 }) {
+  pos(uin, r1, r2);
+  const i = uin / (r1 + r2);
+  return { uout: i * r2, i, p1: i * i * r1, p2: i * i * r2 };
+}
+// Gesucht R1 für gewünschte Ausgangsspannung bei gegebenem R2.
+export function dividerR1({ uin, uout, r2 }) {
+  pos(uin, uout, r2);
+  if (uout >= uin) throw new Error("range");
+  return (r2 * (uin - uout)) / uout;
+}
+
+// Normreihen nach IEC 60063 (Werte je Dekade).
+export const E_SERIES = {
+  E6: [1.0, 1.5, 2.2, 3.3, 4.7, 6.8],
+  E12: [1.0, 1.2, 1.5, 1.8, 2.2, 2.7, 3.3, 3.9, 4.7, 5.6, 6.8, 8.2],
+  E24: [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 2.7, 3.0, 3.3, 3.6, 3.9, 4.3, 4.7, 5.1, 5.6, 6.2, 6.8, 7.5, 8.2, 9.1],
+};
+const roundSig = (x) => Number(x.toPrecision(6));
+// Nächstkleinerer, nächstgrößerer und nächstliegender Normwert.
+export function eSeries(value, name = "E12") {
+  pos(value);
+  const base = E_SERIES[name];
+  const dec = Math.floor(Math.log10(value));
+  const cands = [];
+  for (const d of [dec - 1, dec, dec + 1]) for (const b of base) cands.push(roundSig(b * 10 ** d));
+  cands.sort((a, b) => a - b);
+  const eps = value * 1e-9;
+  const lower = [...cands].reverse().find((c) => c <= value + eps);
+  const upper = cands.find((c) => c >= value - eps);
+  // „nächstliegend“ logarithmisch (relativer Abstand), wie bei Normreihen üblich
+  const nearest = Math.abs(Math.log(value / lower)) <= Math.abs(Math.log(upper / value)) ? lower : upper;
+  return { lower, upper, nearest };
+}
+
+// LED-Vorwiderstand für n LEDs in Reihe.
+export function ledResistor({ ub, uf, i, n = 1, series: ser = "E24" }) {
+  pos(ub, uf, i, n);
+  const ur = ub - n * uf;
+  if (ur <= 0) throw new Error("range");
+  const r = ur / i;
+  const chosen = eSeries(r, ser).upper; // nächstgrößer → Strom bleibt ≤ Sollwert
+  const iReal = ur / chosen;
+  return { r, chosen, iReal, pR: iReal * iReal * chosen };
+}
+
+// Leistung im Wechsel-/Drehstromnetz. U bei 3~ = Außenleiterspannung.
+export function acPower({ system, u, i, cos }) {
+  pos(u, i); cosOk(cos);
+  const k = system === "ac3" ? Math.sqrt(3) : 1;
+  const s = k * u * i;
+  return { s, p: s * cos, q: s * Math.sin(Math.acos(cos)), phiDeg: (Math.acos(cos) * 180) / Math.PI };
+}
+// Strom aus (mechanischer) Leistung, z. B. Motorbemessungsstrom.
+export function currentFromPower({ system, p, u, cos, eta = 1 }) {
+  pos(p, u, eta); cosOk(cos);
+  if (eta > 1) throw new Error("eta");
+  const k = system === "ac3" ? Math.sqrt(3) : 1;
+  const pel = p / eta;
+  return { i: pel / (k * u * cos), pel, s: pel / cos };
+}
+
+// Temperaturkoeffizient α bei 20 °C in 1/K. ANNAHME: Cu 0,00393; Al 0,00403 (Literaturwerte, änderbar).
+export const ALPHA = { cu: 0.00393, al: 0.00403 };
+// Leiterwiderstand, wahlweise Hin- und Rückleiter.
+export function wireResistance({ length, section, kappa, alpha, temp = 20, loop = false }) {
+  pos(length, section, kappa);
+  const r20 = ((loop ? 2 : 1) * length) / (kappa * section);
+  return { r20, rT: r20 * (1 + alpha * (temp - 20)) };
+}
+
+// Blindwiderstände und Reihen-/Parallelresonanz (ideal).
+export function reactance({ f, l = null, c = null }) {
+  pos(f);
+  const w = 2 * Math.PI * f;
+  const r = {};
+  if (l !== null) { pos(l); r.xl = w * l; }
+  if (c !== null) { pos(c); r.xc = 1 / (w * c); }
+  if (l !== null && c !== null) r.f0 = 1 / (2 * Math.PI * Math.sqrt(l * c));
+  return r;
+}
+
+// RC- bzw. RL-Glied: Zeitkonstante und -3-dB-Grenzfrequenz.
+export function timeConstant({ kind, r, x }) {
+  pos(r, x);
+  const tau = kind === "rl" ? x / r : r * x;
+  return { tau, fg: 1 / (2 * Math.PI * tau), t99: 5 * tau };
+}
+
+// Blindleistungskompensation von cos φ1 auf cos φ2 bei Wirkleistung P.
+export function compensation({ p, cos1, cos2, u, f, system }) {
+  pos(p, u, f); cosOk(cos1); cosOk(cos2);
+  if (cos2 <= cos1) throw new Error("range");
+  const qc = p * (Math.tan(Math.acos(cos1)) - Math.tan(Math.acos(cos2)));
+  const w = 2 * Math.PI * f;
+  if (system === "ac3") return { qc, cDelta: qc / (3 * w * u * u), cStar: qc / (w * u * u) };
+  return { qc, c: qc / (w * u * u) };
+}
+
+// Stern-Dreieck-Umrechnung (Widerstände bzw. Impedanzbeträge bei reinen R).
+export function deltaToStar(r12, r23, r31) {
+  pos(r12, r23, r31);
+  const s = r12 + r23 + r31;
+  return { r1: (r12 * r31) / s, r2: (r12 * r23) / s, r3: (r23 * r31) / s };
+}
+export function starToDelta(r1, r2, r3) {
+  pos(r1, r2, r3);
+  const n = r1 * r2 + r2 * r3 + r3 * r1;
+  return { r12: n / r3, r23: n / r1, r31: n / r2 };
+}
+
+// Pegel in dB.
+export const db = {
+  fromVoltageRatio: (x) => (pos(x), 20 * Math.log10(x)),
+  fromPowerRatio: (x) => (pos(x), 10 * Math.log10(x)),
+  toVoltageRatio: (d) => 10 ** (d / 20),
+  toPowerRatio: (d) => 10 ** (d / 10),
+};

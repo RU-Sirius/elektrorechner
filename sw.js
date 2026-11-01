@@ -1,6 +1,6 @@
 // Offline-Cache. Bei Änderungen an den Dateien die Versionsnummer erhöhen.
-const CACHE = "elektrorechner-v2";
-const FILES = ["index.html", "style.css", "app.js", "calc.js", "manifest.webmanifest",
+const CACHE = "elektrorechner-v3";
+const FILES = ["index.html", "style.css", "app.js", "calc.js", "ui.js", "tools.js", "manifest.webmanifest",
                "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png"];
 
 self.addEventListener("install", (e) => {
